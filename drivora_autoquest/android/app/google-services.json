@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "720271236377",
+    "project_id": "drivora-autoquest",
+    "storage_bucket": "drivora-autoquest.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:720271236377:android:09e16bb848e297e827f988",
+        "android_client_info": {
+          "package_name": "com.example.drivora_autoquest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "720271236377-jpq9nts5mdmm904c8rko436hsghuks8o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drivora_autoquest",
+            "certificate_hash": "827ac79734c05c75b3babbca588e44c13405536e"
+          }
+        },
+        {
+          "client_id": "720271236377-0lvfgfccm3k1k9u9s8vhqno55gelrv45.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCm6KGqftarHuyNr-PVqtDH0LZhMoX0gLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "720271236377-0lvfgfccm3k1k9u9s8vhqno55gelrv45.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
