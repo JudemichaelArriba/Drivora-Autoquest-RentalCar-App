@@ -6,7 +6,6 @@ class Car {
   final String carCategory;
   final double rentPrice;
   final DateTime dateAdded;
-  final double price;
   final double rating;
   final String? imageBase64;
 
@@ -18,12 +17,10 @@ class Car {
     required this.carCategory,
     required this.rentPrice,
     required this.dateAdded,
-    required this.price,
     required this.rating,
     this.imageBase64,
   });
 
-  // Factory constructor to create a Car from JSON
   factory Car.fromJson(Map<String, dynamic> json) {
     return Car(
       carId: int.parse(json['carId'].toString()),
@@ -33,7 +30,7 @@ class Car {
       carCategory: json['car_category'].toString(),
       rentPrice: double.parse(json['rent_price'].toString()),
       dateAdded: DateTime.parse(json['date_added'].toString()),
-      price: double.parse(json['price'].toString()),
+
       rating: double.parse(json['rating'].toString()),
       imageBase64: json['image_data']?.toString(),
     );
@@ -48,7 +45,7 @@ class Car {
       'car_category': carCategory,
       'rent_price': rentPrice,
       'date_added': dateAdded.toIso8601String(),
-      'price': price,
+
       'rating': rating,
       'image_base64': imageBase64,
     };

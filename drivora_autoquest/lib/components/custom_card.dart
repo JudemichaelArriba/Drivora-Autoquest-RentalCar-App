@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 class CustomCard extends StatelessWidget {
   final String title;
   final String imageUrl; // can be base64 or normal URL
-  final String price;
+  final String rentPrice;
   final VoidCallback onButtonPressed;
 
   const CustomCard({
     super.key,
     required this.title,
     required this.imageUrl,
-    required this.price,
+    required this.rentPrice,
     required this.onButtonPressed,
   });
 
@@ -94,7 +94,7 @@ class CustomCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "$price /per day",
+                    "$rentPrice /per day",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,

@@ -114,15 +114,22 @@ class _HomePageState extends State<HomePage> {
                         imageUrl: car.imageBase64 != null
                             ? "data:image/png;base64,${car.imageBase64}"
                             : "https://via.placeholder.com/150",
-                        price: "\$${car.price}",
+                        rentPrice: "\$${car.rentPrice}",
                         onButtonPressed: () {
                           Get.to(
-                            SelectedCarPage(
+                            () => SelectedCarPage(
                               title: car.carName,
-                              imageUrl:
-                                  car.imageBase64 ??
-                                  "", // pass only the raw base64 string
-                              price: "${car.price}",
+                              imageUrl: car.imageBase64 ?? "",
+                              rentPrice: "${car.rentPrice}",
+                              carBrand: car.carBrand.isNotEmpty
+                                  ? car.carBrand
+                                  : "Unknown brand",
+                              carDescription: car.carDescription.isNotEmpty
+                                  ? car.carDescription
+                                  : "No description available",
+                              carCategory: car.carCategory.isNotEmpty
+                                  ? car.carCategory
+                                  : "Uncategorized",
                             ),
                           );
                         },
