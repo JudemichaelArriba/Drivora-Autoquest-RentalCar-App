@@ -43,7 +43,6 @@ class SelectedCarPage extends StatelessWidget {
       body: CustomScrollView(
         physics: const ClampingScrollPhysics(),
         slivers: [
-          // Collapsing image with styled back button
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
@@ -61,7 +60,11 @@ class SelectedCarPage extends StatelessWidget {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: decodedImage != null
-                  ? Image.memory(decodedImage, fit: BoxFit.cover)
+                  ? Image.memory(
+                      decodedImage,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    )
                   : Container(
                       color: Colors.grey.shade300,
                       alignment: Alignment.center,
@@ -73,8 +76,6 @@ class SelectedCarPage extends StatelessWidget {
                     ),
             ),
           ),
-
-          // Content area
           SliverFillRemaining(
             hasScrollBody: false,
             child: Column(
@@ -86,7 +87,6 @@ class SelectedCarPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // title + rating + price (modern style)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -169,7 +169,6 @@ class SelectedCarPage extends StatelessWidget {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 20),
                       Divider(
                         color: Colors.grey.shade300,
@@ -177,7 +176,6 @@ class SelectedCarPage extends StatelessWidget {
                         height: 1,
                       ),
                       const SizedBox(height: 20),
-
                       _buildDetailTile(
                         icon: Icons.directions_car_filled,
                         label: "Brand",
@@ -195,10 +193,7 @@ class SelectedCarPage extends StatelessWidget {
                         label: "Description",
                         value: carDescription,
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Agency card
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -256,7 +251,6 @@ class SelectedCarPage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const Spacer(),
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -270,13 +264,13 @@ class SelectedCarPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
-                        // TODO: booking action
-                      },
+                      onPressed: () {},
                       child: const Text(
                         'Book Now',
                         style: TextStyle(
+                          color: Colors.white,
                           fontSize: 18,
+
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -324,6 +318,7 @@ class SelectedCarPage extends StatelessWidget {
                   value,
                   style: const TextStyle(
                     fontSize: 16,
+
                     fontWeight: FontWeight.w600,
                   ),
                 ),

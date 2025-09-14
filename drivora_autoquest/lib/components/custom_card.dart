@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class CustomCard extends StatelessWidget {
   final String title;
-  final String imageUrl; // can be base64 or normal URL
+  final String imageUrl;
   final String rentPrice;
   final VoidCallback onButtonPressed;
 

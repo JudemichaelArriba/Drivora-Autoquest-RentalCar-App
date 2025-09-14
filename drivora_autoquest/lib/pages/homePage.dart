@@ -3,11 +3,9 @@ import 'package:drivora_autoquest/pages/selectedCarPage.dart';
 import 'package:flutter/material.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:get/get.dart';
 import 'package:drivora_autoquest/models/car.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
-import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -98,7 +96,6 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-
         Expanded(
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -116,20 +113,70 @@ class _HomePageState extends State<HomePage> {
                             : "https://via.placeholder.com/150",
                         rentPrice: "\$${car.rentPrice}",
                         onButtonPressed: () {
-                          Get.to(
-                            () => SelectedCarPage(
-                              title: car.carName,
-                              imageUrl: car.imageBase64 ?? "",
-                              rentPrice: "${car.rentPrice}",
-                              carBrand: car.carBrand.isNotEmpty
-                                  ? car.carBrand
-                                  : "Unknown brand",
-                              carDescription: car.carDescription.isNotEmpty
-                                  ? car.carDescription
-                                  : "No description available",
-                              carCategory: car.carCategory.isNotEmpty
-                                  ? car.carCategory
-                                  : "Uncategorized",
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              transitionDuration: const Duration(
+                                milliseconds: 450,
+                              ),
+                              reverseTransitionDuration: const Duration(
+                                milliseconds: 200,
+                              ),
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      SelectedCarPage(
+                                        title: car.carName,
+                                        imageUrl: car.imageBase64 ?? "",
+                                        rentPrice: "${car.rentPrice}",
+                                        carBrand: car.carBrand.isNotEmpty
+                                            ? car.carBrand
+                                            : "Unknown brand",
+                                        carDescription:
+                                            car.carDescription.isNotEmpty
+                                            ? car.carDescription
+                                            : "No description available",
+                                        carCategory: car.carCategory.isNotEmpty
+                                            ? car.carCategory
+                                            : "Uncategorized",
+                                      ),
+                              transitionsBuilder:
+                                  (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    final scaleAnimation =
+                                        Tween<double>(
+                                          begin: 0.8,
+                                          end: 1.0,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOut,
+                                            reverseCurve: Curves.easeIn,
+                                          ),
+                                        );
+                                    final fadeAnimation =
+                                        Tween<double>(
+                                          begin: 0.0,
+                                          end: 1.0,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOut,
+                                            reverseCurve: Curves.easeIn,
+                                          ),
+                                        );
+
+                                    return ScaleTransition(
+                                      scale: scaleAnimation,
+                                      child: FadeTransition(
+                                        opacity: fadeAnimation,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
                             ),
                           );
                         },
