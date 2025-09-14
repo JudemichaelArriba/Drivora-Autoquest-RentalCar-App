@@ -4,39 +4,52 @@ import 'package:flutter/material.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
+import 'package:drivora_autoquest/models/car.dart';
+import 'package:drivora_autoquest/services/car_service.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
+import 'dart:convert';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<Car> cars = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCars();
+  }
+
+  Future<void> fetchCars() async {
+    try {
+      final carService = CarService(api: apiConnection);
+      final data = await carService.getCars();
+
+      setState(() {
+        cars = data.map<Car>((json) => Car.fromJson(json)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching cars: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-
     String firstName = "";
     if (user != null && user.displayName != null) {
       firstName = user.displayName!.split(" ").first;
     }
-
-    final List<Map<String, String>> cars = [
-      {
-        "title": "Nissan Sedan",
-        "imageUrl":
-            "https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
-        "price": "\$50",
-      },
-      {
-        "title": "Luxury Supercar",
-        "imageUrl": "https://photogallery.indiatimes.com/photo/80387914.cms",
-        "price": "\$120",
-      },
-      {
-        "title": "Nissan Choice",
-        "imageUrl":
-            "https://www.nissan.in/content/dam/Nissan/in/Nissan-intelligent-choice/nic-banner.jpg",
-        "price": "\$70",
-      },
-    ];
 
     return Column(
       children: [
@@ -87,30 +100,36 @@ class HomePage extends StatelessWidget {
         ),
 
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: cars.length,
-            itemBuilder: (context, index) {
-              final car = cars[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: CustomCard(
-                  title: car["title"]!,
-                  imageUrl: car["imageUrl"]!,
-                  price: car["price"]!,
-                  onButtonPressed: () {
-                    Get.to(
-                      SelectedCarPage(
-                        title: car["title"]!,
-                        imageUrl: car["imageUrl"]!,
-                        price: car["price"]!,
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cars.length,
+                  itemBuilder: (context, index) {
+                    final car = cars[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: CustomCard(
+                        title: car.carName,
+                        imageUrl: car.imageBase64 != null
+                            ? "data:image/png;base64,${car.imageBase64}"
+                            : "https://via.placeholder.com/150",
+                        price: "\$${car.price}",
+                        onButtonPressed: () {
+                          Get.to(
+                            SelectedCarPage(
+                              title: car.carName,
+                              imageUrl:
+                                  car.imageBase64 ??
+                                  "", // pass only the raw base64 string
+                              price: "${car.price}",
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );

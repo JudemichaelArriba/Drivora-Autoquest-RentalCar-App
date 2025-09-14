@@ -1,8 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data'; // ✅ Needed for Uint8List
 import 'package:flutter/material.dart';
 
 class SelectedCarPage extends StatelessWidget {
   final String title;
-  final String imageUrl;
+  final String imageUrl; // raw base64 string (no "data:image/png;base64,")
   final String price;
 
   const SelectedCarPage({
@@ -12,8 +14,21 @@ class SelectedCarPage extends StatelessWidget {
     required this.price,
   });
 
+  // ✅ Helper to safely decode base64
+  Uint8List? _decodeBase64(String data) {
+    try {
+      return base64Decode(data);
+    } catch (e) {
+      return null; // return null if invalid
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final Uint8List? decodedImage = imageUrl.isNotEmpty
+        ? _decodeBase64(imageUrl)
+        : null;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       body: Column(
@@ -22,14 +37,12 @@ class SelectedCarPage extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.error, color: Colors.red),
-                  ),
-                ),
+                child: decodedImage != null
+                    ? Image.memory(decodedImage, fit: BoxFit.cover)
+                    : Container(
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.error, color: Colors.red),
+                      ),
               ),
               Positioned(
                 top: 40,
@@ -53,10 +66,6 @@ class SelectedCarPage extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(0),
-                  topRight: Radius.circular(0),
-                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black12,
@@ -170,8 +179,8 @@ class SelectedCarPage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF7A30),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 18,
+                          horizontal: 10,
+                          vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
