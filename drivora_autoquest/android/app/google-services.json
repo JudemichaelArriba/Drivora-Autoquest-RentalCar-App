@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "720271236377-6cnvu1gkccjf3bhgap1m3ubjmot4u4ec.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drivora_autoquest",
+            "certificate_hash": "d156567e28cce7e96b9c0c461a98ae058353196b"
+          }
+        },
+        {
           "client_id": "720271236377-jpq9nts5mdmm904c8rko436hsghuks8o.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

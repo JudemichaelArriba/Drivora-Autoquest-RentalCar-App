@@ -1,4 +1,5 @@
 import 'package:drivora_autoquest/pages/login_page.dart';
+import 'package:drivora_autoquest/components/onboardingScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
@@ -14,6 +15,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(debugShowCheckedModeBanner: false, home: LoginPage());
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      // Show onboarding first, then login
+      home: const OnboardingScreen(),
+    );
   }
 }

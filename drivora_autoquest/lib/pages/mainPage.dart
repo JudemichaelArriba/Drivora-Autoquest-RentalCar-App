@@ -24,7 +24,8 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 241, 241, 241),
+      extendBody: true,
+
       body: Obx(() => pages[navController.selectedIndex.value]),
       bottomNavigationBar: BottomNavBar(),
     );
