@@ -108,10 +108,10 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: CustomCard(
                         title: car.carName,
-                        imageUrl: car.imageBase64 != null
-                            ? "data:image/png;base64,${car.imageBase64}"
+                        imageUrl: car.imageBase64_1 != null
+                            ? "data:image/png;base64,${car.imageBase64_1}"
                             : "https://via.placeholder.com/150",
-                        rentPrice: "\$${car.rentPrice}",
+                        rentPrice: "₱${car.rentPrice}",
                         onButtonPressed: () {
                           Navigator.push(
                             context,
@@ -126,7 +126,9 @@ class _HomePageState extends State<HomePage> {
                                   (context, animation, secondaryAnimation) =>
                                       SelectedCarPage(
                                         title: car.carName,
-                                        imageUrl: car.imageBase64 ?? "",
+                                        imageUrl1: car.imageBase64_1 ?? "",
+                                        imageUrl2: car.imageBase64_2 ?? "",
+                                        imageUrl3: car.imageBase64_3 ?? "",
                                         rentPrice: "${car.rentPrice}",
                                         carBrand: car.carBrand.isNotEmpty
                                             ? car.carBrand

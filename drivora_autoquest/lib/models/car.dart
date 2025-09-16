@@ -6,8 +6,11 @@ class Car {
   final String carCategory;
   final double rentPrice;
   final DateTime dateAdded;
-  final double rating;
-  final String? imageBase64;
+  final String? imageBase64_1;
+  final String? imageBase64_2;
+  final String? imageBase64_3;
+  final String status; // "Booked" or "Available"
+  final bool favorites;
 
   Car({
     required this.carId,
@@ -17,8 +20,11 @@ class Car {
     required this.carCategory,
     required this.rentPrice,
     required this.dateAdded,
-    required this.rating,
-    this.imageBase64,
+    this.imageBase64_1,
+    this.imageBase64_2,
+    this.imageBase64_3,
+    required this.status,
+    required this.favorites,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) {
@@ -30,9 +36,13 @@ class Car {
       carCategory: json['car_category'].toString(),
       rentPrice: double.parse(json['rent_price'].toString()),
       dateAdded: DateTime.parse(json['date_added'].toString()),
-
-      rating: double.parse(json['rating'].toString()),
-      imageBase64: json['image_data']?.toString(),
+      imageBase64_1: json['image_data1']?.toString(),
+      imageBase64_2: json['image_data2']?.toString(),
+      imageBase64_3: json['image_data3']?.toString(),
+      status: json['status'].toString(),
+      favorites:
+          json['favorites'].toString() == '1' ||
+          json['favorites'].toString().toLowerCase() == 'true',
     );
   }
 
@@ -45,9 +55,11 @@ class Car {
       'car_category': carCategory,
       'rent_price': rentPrice,
       'date_added': dateAdded.toIso8601String(),
-
-      'rating': rating,
-      'image_base64': imageBase64,
+      'image_data1': imageBase64_1,
+      'image_data2': imageBase64_2,
+      'image_data3': imageBase64_3,
+      'status': status,
+      'favorites': favorites,
     };
   }
 }

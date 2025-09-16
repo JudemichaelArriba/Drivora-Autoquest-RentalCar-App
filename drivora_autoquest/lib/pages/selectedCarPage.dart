@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
-class SelectedCarPage extends StatelessWidget {
+class SelectedCarPage extends StatefulWidget {
   final String title;
-  final String imageUrl;
+  final String imageUrl1;
+  final String imageUrl2;
+  final String imageUrl3;
   final String rentPrice;
   final String carBrand;
   final String carDescription;
@@ -13,12 +15,28 @@ class SelectedCarPage extends StatelessWidget {
   const SelectedCarPage({
     super.key,
     required this.title,
-    this.imageUrl = '',
+    this.imageUrl1 = '',
+    this.imageUrl2 = '',
+    this.imageUrl3 = '',
     this.rentPrice = '0',
     this.carBrand = 'Unknown brand',
     this.carDescription = 'No description available',
     this.carCategory = 'Uncategorized',
   });
+
+  @override
+  State<SelectedCarPage> createState() => _SelectedCarPageState();
+}
+
+class _SelectedCarPageState extends State<SelectedCarPage> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  late final List<Uint8List?> _decodedImages = [
+    _decodeBase64(widget.imageUrl1),
+    _decodeBase64(widget.imageUrl2),
+    _decodeBase64(widget.imageUrl3),
+  ];
 
   String _stripBase64Prefix(String s) {
     return s.replaceFirst(RegExp(r'data:image/[^;]+;base64,'), '');
@@ -34,10 +52,42 @@ class SelectedCarPage extends StatelessWidget {
     }
   }
 
+  Widget _buildImage(Uint8List? decoded) {
+    if (decoded != null) {
+      return Image.memory(
+        decoded,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        gaplessPlayback: true,
+      );
+    }
+    return Container(
+      color: Colors.grey.shade300,
+      alignment: Alignment.center,
+      child: const Icon(Icons.directions_car, size: 64, color: Colors.white70),
+    );
+  }
+
+  Widget _buildDotIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (index) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          width: _currentPage == index ? 10 : 6,
+          height: _currentPage == index ? 10 : 6,
+          decoration: BoxDecoration(
+            color: _currentPage == index ? Colors.white : Colors.white54,
+            shape: BoxShape.circle,
+          ),
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Uint8List? decodedImage = _decodeBase64(imageUrl);
-
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       body: CustomScrollView(
@@ -59,21 +109,31 @@ class SelectedCarPage extends StatelessWidget {
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: decodedImage != null
-                  ? Image.memory(
-                      decodedImage,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    )
-                  : Container(
-                      color: Colors.grey.shade300,
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.directions_car,
-                        size: 64,
-                        color: Colors.white70,
-                      ),
-                    ),
+              background: Stack(
+                children: [
+                  PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      if (_currentPage != index) {
+                        setState(() {
+                          _currentPage = index;
+                        });
+                      }
+                    },
+                    children: [
+                      _buildImage(_decodedImages[0]),
+                      _buildImage(_decodedImages[1]),
+                      _buildImage(_decodedImages[2]),
+                    ],
+                  ),
+                  Positioned(
+                    bottom: 10,
+                    left: 0,
+                    right: 0,
+                    child: _buildDotIndicator(),
+                  ),
+                ],
+              ),
             ),
           ),
           SliverFillRemaining(
@@ -91,67 +151,21 @@ class SelectedCarPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  style: const TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -0.5,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        children: const [
-                                          Icon(
-                                            Icons.star,
-                                            color: Colors.orange,
-                                            size: 16,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            "92/100",
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.orange,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      "14 reviews",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            child: Text(
+                              widget.title,
+                              style: const TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "\$$rentPrice",
+                                "\₱${widget.rentPrice}",
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -179,19 +193,19 @@ class SelectedCarPage extends StatelessWidget {
                       _buildDetailTile(
                         icon: Icons.directions_car_filled,
                         label: "Brand",
-                        value: carBrand,
+                        value: widget.carBrand,
                       ),
                       const SizedBox(height: 12),
                       _buildDetailTile(
                         icon: Icons.category,
                         label: "Category",
-                        value: carCategory,
+                        value: widget.carCategory,
                       ),
                       const SizedBox(height: 12),
                       _buildDetailTile(
                         icon: Icons.description,
                         label: "Description",
-                        value: carDescription,
+                        value: widget.carDescription,
                       ),
                       const SizedBox(height: 24),
                       Container(
@@ -221,18 +235,10 @@ class SelectedCarPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'DreamCars Agency',
+                                    'Drivora Agency',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    '5.0 • 14 reviews',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
                                     ),
                                   ),
                                 ],
@@ -270,7 +276,6 @@ class SelectedCarPage extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
-
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -318,7 +323,6 @@ class SelectedCarPage extends StatelessWidget {
                   value,
                   style: const TextStyle(
                     fontSize: 16,
-
                     fontWeight: FontWeight.w600,
                   ),
                 ),

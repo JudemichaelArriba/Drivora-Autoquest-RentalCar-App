@@ -77,8 +77,11 @@ class CustomCard extends StatelessWidget {
             Positioned(
               left: 8,
               top: 150,
+              right: 16, // ✅ Added to constrain text width
               child: Text(
                 title,
+                maxLines: 1, // ✅ Limit to 1 line
+                overflow: TextOverflow.ellipsis, // ✅ Show "..." if too long
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
