@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
-class CustomCard extends StatelessWidget {
+class CustomCard extends StatefulWidget {
   final String title;
   final String imageUrl;
   final String rentPrice;
@@ -16,10 +16,17 @@ class CustomCard extends StatelessWidget {
     required this.onButtonPressed,
   });
 
+  @override
+  State<CustomCard> createState() => _CustomCardState();
+}
+
+class _CustomCardState extends State<CustomCard> {
+  bool _isFavorite = false;
+
   bool get _isBase64 =>
-      imageUrl.isNotEmpty &&
-      !imageUrl.startsWith("http") &&
-      !imageUrl.startsWith("https");
+      widget.imageUrl.isNotEmpty &&
+      !widget.imageUrl.startsWith("http") &&
+      !widget.imageUrl.startsWith("https");
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +35,9 @@ class CustomCard extends StatelessWidget {
     if (_isBase64) {
       try {
         Uint8List bytes = base64Decode(
-          imageUrl.contains(",") ? imageUrl.split(",").last : imageUrl,
+          widget.imageUrl.contains(",")
+              ? widget.imageUrl.split(",").last
+              : widget.imageUrl,
         );
         background = Image.memory(
           bytes,
@@ -44,7 +53,7 @@ class CustomCard extends StatelessWidget {
       }
     } else {
       background = Image.network(
-        imageUrl,
+        widget.imageUrl,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
@@ -77,15 +86,37 @@ class CustomCard extends StatelessWidget {
             Positioned(
               left: 8,
               top: 150,
-              right: 16, // ✅ Added to constrain text width
+              right: 50,
               child: Text(
-                title,
-                maxLines: 1, // ✅ Limit to 1 line
-                overflow: TextOverflow.ellipsis, // ✅ Show "..." if too long
+                widget.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: _isFavorite ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isFavorite = !_isFavorite;
+                    });
+                  },
                 ),
               ),
             ),
@@ -97,7 +128,7 @@ class CustomCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "$rentPrice /per day",
+                    "${widget.rentPrice} /per day",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -105,7 +136,7 @@ class CustomCard extends StatelessWidget {
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: onButtonPressed,
+                    onPressed: widget.onButtonPressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFF7A30),
                       minimumSize: const Size(80, 35),

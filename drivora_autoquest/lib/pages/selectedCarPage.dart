@@ -32,6 +32,8 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  bool _isFavorite = false;
+
   late final List<Uint8List?> _decodedImages = [
     _decodeBase64(widget.imageUrl1),
     _decodeBase64(widget.imageUrl2),
@@ -108,6 +110,29 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
+            actions: [
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: _isFavorite ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isFavorite = !_isFavorite;
+                    });
+                    if (_isFavorite) {
+                      print("Favorite got selected");
+                    }
+                  },
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
@@ -136,6 +161,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
               ),
             ),
           ),
+          // ---- Rest of UI ----
           SliverFillRemaining(
             hasScrollBody: false,
             child: Column(
@@ -165,7 +191,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "\₱${widget.rentPrice}",
+                                "₱${widget.rentPrice}",
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
