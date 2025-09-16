@@ -30,18 +30,27 @@ class _CustomCardState extends State<CustomCard> {
       !widget.imageUrl.startsWith("https");
 
   @override
+  void didUpdateWidget(covariant CustomCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _decodedImage = _isBase64 ? _decodeImage(widget.imageUrl) : null;
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
-    if (_isBase64) {
-      try {
-        _decodedImage = base64Decode(
-          widget.imageUrl.contains(",")
-              ? widget.imageUrl.split(",").last
-              : widget.imageUrl,
-        );
-      } catch (e) {
-        _decodedImage = null;
-      }
+    _decodedImage = _isBase64 ? _decodeImage(widget.imageUrl) : null;
+  }
+
+  Uint8List? _decodeImage(String imageUrl) {
+    try {
+      return base64Decode(
+        imageUrl.contains(",") ? imageUrl.split(",").last : imageUrl,
+      );
+    } catch (e) {
+      return null;
     }
   }
 
