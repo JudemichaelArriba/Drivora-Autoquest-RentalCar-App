@@ -16,8 +16,24 @@ class ApiService {
       throw Exception('Failed to load data from $endpoint');
     }
   }
+
+  Future<Map<String, dynamic>> postData(
+    String endpoint,
+    Map<String, String> body,
+  ) async {
+    final url = Uri.parse('$baseUrl/$endpoint');
+    final response = await http.post(url, body: body);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+        'Failed to post data to $endpoint: ${response.statusCode}',
+      );
+    }
+  }
 }
 
 final ApiService apiConnection = ApiService(
-  baseUrl: 'http://10.244.54.222/drivora_api',
+  baseUrl: 'http://172.23.179.222/drivora_api',
 );

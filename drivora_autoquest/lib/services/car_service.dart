@@ -13,4 +13,36 @@ class CarService {
       throw Exception('Failed to fetch cars: $e');
     }
   }
+
+  Future<bool> markAsFavorite(int carId) async {
+    try {
+      final response = await api.postData('mark_favorite.php', {
+        'carId': carId.toString(),
+      });
+
+      if (response['success'] == true) {
+        return true;
+      } else {
+        throw Exception(response['message'] ?? 'Failed to favorite car');
+      }
+    } catch (e) {
+      throw Exception('Error marking favorite: $e');
+    }
+  }
+
+  Future<bool> unmarkAsFavorite(int carId) async {
+    try {
+      final response = await api.postData('UnMarkCarAsFavorite.php', {
+        'carId': carId.toString(),
+      });
+
+      if (response['success'] == true) {
+        return true;
+      } else {
+        throw Exception(response['message'] ?? 'Failed to unmark favorite car');
+      }
+    } catch (e) {
+      throw Exception('Error unmarking favorite: $e');
+    }
+  }
 }

@@ -136,11 +136,14 @@ class _HomePageState extends State<HomePage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: CustomCard(
+                        key: ValueKey(car.carId),
+                        carId: car.carId,
                         title: car.carName,
                         imageUrl: car.imageBase64_1 != null
                             ? "data:image/png;base64,${car.imageBase64_1}"
                             : "https://via.placeholder.com/150",
                         rentPrice: "₱${car.rentPrice}",
+                        favorites: car.favorites,
                         onButtonPressed: () {
                           Navigator.push(
                             context,
@@ -154,6 +157,7 @@ class _HomePageState extends State<HomePage> {
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
                                       SelectedCarPage(
+                                        carId: car.carId,
                                         title: car.carName,
                                         imageUrl1: car.imageBase64_1 ?? "",
                                         imageUrl2: car.imageBase64_2 ?? "",
@@ -169,6 +173,7 @@ class _HomePageState extends State<HomePage> {
                                         carCategory: car.carCategory.isNotEmpty
                                             ? car.carCategory
                                             : "Uncategorized",
+                                        favorites: car.favorites,
                                       ),
                               transitionsBuilder:
                                   (
@@ -209,6 +214,11 @@ class _HomePageState extends State<HomePage> {
                                   },
                             ),
                           );
+                        },
+                        onFavoriteChanged: (isFav) {
+                          setState(() {
+                            car.favorites = isFav;
+                          });
                         },
                       ),
                     );

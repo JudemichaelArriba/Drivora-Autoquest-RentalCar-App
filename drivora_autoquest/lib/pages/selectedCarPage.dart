@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:drivora_autoquest/components/rentalRulesDialog.dart';
+import 'package:drivora_autoquest/services/car_service.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:flutter/material.dart';
 
 class SelectedCarPage extends StatefulWidget {
+  final int carId;
   final String title;
   final String imageUrl1;
   final String imageUrl2;
@@ -11,9 +15,11 @@ class SelectedCarPage extends StatefulWidget {
   final String carBrand;
   final String carDescription;
   final String carCategory;
+  final bool favorites;
 
   const SelectedCarPage({
     super.key,
+    required this.carId,
     required this.title,
     this.imageUrl1 = '',
     this.imageUrl2 = '',
@@ -22,6 +28,7 @@ class SelectedCarPage extends StatefulWidget {
     this.carBrand = 'Unknown brand',
     this.carDescription = 'No description available',
     this.carCategory = 'Uncategorized',
+    this.favorites = false,
   });
 
   @override
@@ -31,23 +38,28 @@ class SelectedCarPage extends StatefulWidget {
 class _SelectedCarPageState extends State<SelectedCarPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  late bool _isFavorite;
+  bool _agreedToRules = false;
+  late List<Uint8List?> _decodedImages;
 
-  bool _isFavorite = false;
+  @override
+  void initState() {
+    super.initState();
+    // Initialize favorite from the passed value
+    _isFavorite = widget.favorites;
 
-  late final List<Uint8List?> _decodedImages = [
-    _decodeBase64(widget.imageUrl1),
-    _decodeBase64(widget.imageUrl2),
-    _decodeBase64(widget.imageUrl3),
-  ];
-
-  String _stripBase64Prefix(String s) {
-    return s.replaceFirst(RegExp(r'data:image/[^;]+;base64,'), '');
+    // Decode images here (keeps the UI identical)
+    _decodedImages = [
+      _decodeBase64(widget.imageUrl1),
+      _decodeBase64(widget.imageUrl2),
+      _decodeBase64(widget.imageUrl3),
+    ];
   }
 
   Uint8List? _decodeBase64(String data) {
     if (data.isEmpty) return null;
     try {
-      final clean = _stripBase64Prefix(data);
+      final clean = data.replaceFirst(RegExp(r'data:image/[^;]+;base64,'), '');
       return base64Decode(clean);
     } catch (e) {
       return null;
@@ -88,6 +100,54 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
     );
   }
 
+  void _showRentalRulesDialog() async {
+    final agreed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const RentalRulesDialog(),
+    );
+
+    if (agreed == true) {
+      setState(() {
+        _agreedToRules = true;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final carService = CarService(api: apiConnection);
+
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+
+    try {
+      bool success;
+      if (_isFavorite) {
+        success = await carService.markAsFavorite(widget.carId);
+      } else {
+        success = await carService.unmarkAsFavorite(widget.carId);
+      }
+
+      if (!success) {
+        // revert if not success
+        setState(() {
+          _isFavorite = !_isFavorite;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to update favorite.")),
+        );
+      }
+    } catch (e) {
+      // revert and show error
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to update favorite: $e")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,7 +167,8 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
+
+                onPressed: () => Navigator.pop(context, _isFavorite),
               ),
             ),
             actions: [
@@ -122,14 +183,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                     _isFavorite ? Icons.favorite : Icons.favorite_border,
                     color: _isFavorite ? Colors.red : Colors.white,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isFavorite = !_isFavorite;
-                    });
-                    if (_isFavorite) {
-                      print("Favorite got selected");
-                    }
-                  },
+                  onPressed: _toggleFavorite,
                 ),
               ),
             ],
@@ -246,7 +300,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.black,
+                                color: const Color(0xFFFF7A30),
                                 borderRadius: BorderRadius.circular(25),
                               ),
                               child: const Icon(
@@ -261,7 +315,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Drivora Agency',
+                                    'Drivora Autoquest',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -270,11 +324,14 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                                 ],
                               ),
                             ),
-                            const Text(
-                              'Rental rules >',
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
+                            GestureDetector(
+                              onTap: _showRentalRulesDialog,
+                              child: const Text(
+                                'Rental rules >',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -296,7 +353,18 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        if (!_agreedToRules) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Please read and accept the Rental Rules first.",
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                      },
                       child: const Text(
                         'Book Now',
                         style: TextStyle(

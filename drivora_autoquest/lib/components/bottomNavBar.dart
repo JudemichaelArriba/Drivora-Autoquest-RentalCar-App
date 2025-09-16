@@ -60,7 +60,7 @@ class BottomNavBar extends StatelessWidget {
                     onTabChange: navController.changeTab,
                     tabs: const [
                       GButton(icon: Icons.home, text: 'Home'),
-                      GButton(icon: Icons.directions_car, text: 'Cars'),
+                      GButton(icon: Icons.favorite, text: 'Favourites'),
                       GButton(icon: Icons.book, text: 'Bookings'),
                       GButton(icon: Icons.payment, text: 'Payments'),
                     ],

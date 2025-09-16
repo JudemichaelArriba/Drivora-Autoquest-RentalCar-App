@@ -1,9 +1,10 @@
+import 'package:drivora_autoquest/pages/favoritesPage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../components/navigation_controller.dart';
 import '../components/bottomNavBar.dart';
 import 'homePage.dart';
-import 'carsPage.dart';
+
 import 'bookingsPage.dart';
 import 'paymentsPage.dart';
 import 'profilePage.dart';
@@ -15,7 +16,7 @@ class MainPage extends StatelessWidget {
 
   final List<Widget> pages = [
     const HomePage(),
-    const CarsPage(),
+    const Favoritespage(),
     const BookingsPage(),
     const PaymentsPage(),
     const ProfilePage(),

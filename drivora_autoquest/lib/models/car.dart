@@ -9,8 +9,9 @@ class Car {
   final String? imageBase64_1;
   final String? imageBase64_2;
   final String? imageBase64_3;
-  final String status; // "Booked" or "Available"
-  final bool favorites;
+  final String status;
+
+  bool favorites;
 
   Car({
     required this.carId,
@@ -24,7 +25,7 @@ class Car {
     this.imageBase64_2,
     this.imageBase64_3,
     required this.status,
-    required this.favorites,
+    this.favorites = false,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) {

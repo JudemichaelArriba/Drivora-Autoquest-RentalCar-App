@@ -1,19 +1,27 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:drivora_autoquest/services/car_service.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
 
 class CustomCard extends StatefulWidget {
+  final int carId;
   final String title;
   final String imageUrl;
   final String rentPrice;
+  final bool favorites;
   final VoidCallback onButtonPressed;
+  final ValueChanged<bool>? onFavoriteChanged;
 
   const CustomCard({
     super.key,
+    required this.carId,
     required this.title,
     required this.imageUrl,
     required this.rentPrice,
+    required this.favorites,
     required this.onButtonPressed,
+    this.onFavoriteChanged,
   });
 
   @override
@@ -21,7 +29,7 @@ class CustomCard extends StatefulWidget {
 }
 
 class _CustomCardState extends State<CustomCard> {
-  bool _isFavorite = false;
+  late bool _isFavorite;
   Uint8List? _decodedImage;
 
   bool get _isBase64 =>
@@ -30,17 +38,9 @@ class _CustomCardState extends State<CustomCard> {
       !widget.imageUrl.startsWith("https");
 
   @override
-  void didUpdateWidget(covariant CustomCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.imageUrl != widget.imageUrl) {
-      _decodedImage = _isBase64 ? _decodeImage(widget.imageUrl) : null;
-    }
-  }
-
-  @override
   void initState() {
     super.initState();
+    _isFavorite = widget.favorites;
     _decodedImage = _isBase64 ? _decodeImage(widget.imageUrl) : null;
   }
 
@@ -51,6 +51,32 @@ class _CustomCardState extends State<CustomCard> {
       );
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final carService = CarService(api: apiConnection);
+    try {
+      bool success;
+      if (_isFavorite) {
+        success = await carService.unmarkAsFavorite(widget.carId);
+      } else {
+        success = await carService.markAsFavorite(widget.carId);
+      }
+
+      if (success) {
+        setState(() {
+          _isFavorite = !_isFavorite;
+        });
+        if (widget.onFavoriteChanged != null) {
+          widget.onFavoriteChanged!(_isFavorite);
+        }
+      }
+    } catch (e) {
+      print("Error toggling favorite: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to update favorite")),
+      );
     }
   }
 
@@ -126,11 +152,7 @@ class _CustomCardState extends State<CustomCard> {
                     _isFavorite ? Icons.favorite : Icons.favorite_border,
                     color: _isFavorite ? Colors.red : Colors.white,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isFavorite = !_isFavorite;
-                    });
-                  },
+                  onPressed: _toggleFavorite,
                 ),
               ),
             ),
