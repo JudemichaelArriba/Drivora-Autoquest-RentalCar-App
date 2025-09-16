@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                             context,
                             PageRouteBuilder(
                               transitionDuration: const Duration(
-                                milliseconds: 450,
+                                milliseconds: 380,
                               ),
                               reverseTransitionDuration: const Duration(
                                 milliseconds: 200,
