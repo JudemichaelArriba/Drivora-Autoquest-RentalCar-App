@@ -22,6 +22,7 @@ class CustomCard extends StatefulWidget {
 
 class _CustomCardState extends State<CustomCard> {
   bool _isFavorite = false;
+  Uint8List? _decodedImage;
 
   bool get _isBase64 =>
       widget.imageUrl.isNotEmpty &&
@@ -29,31 +30,36 @@ class _CustomCardState extends State<CustomCard> {
       !widget.imageUrl.startsWith("https");
 
   @override
-  Widget build(BuildContext context) {
-    Widget background;
-
+  void initState() {
+    super.initState();
     if (_isBase64) {
       try {
-        Uint8List bytes = base64Decode(
+        _decodedImage = base64Decode(
           widget.imageUrl.contains(",")
               ? widget.imageUrl.split(",").last
               : widget.imageUrl,
         );
-        background = Image.memory(
-          bytes,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-        );
       } catch (e) {
-        background = Image.network(
-          "https://via.placeholder.com/150",
-          fit: BoxFit.cover,
-        );
+        _decodedImage = null;
       }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget background;
+    if (_isBase64 && _decodedImage != null) {
+      background = Image.memory(
+        _decodedImage!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      );
     } else {
       background = Image.network(
-        widget.imageUrl,
+        widget.imageUrl.isNotEmpty
+            ? widget.imageUrl
+            : "https://via.placeholder.com/150",
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
@@ -98,7 +104,6 @@ class _CustomCardState extends State<CustomCard> {
                 ),
               ),
             ),
-
             Positioned(
               top: 8,
               right: 8,
