@@ -161,7 +161,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
               ),
             ),
           ),
-          // ---- Rest of UI ----
+
           SliverFillRemaining(
             hasScrollBody: false,
             child: Column(
