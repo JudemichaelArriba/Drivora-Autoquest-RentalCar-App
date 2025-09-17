@@ -44,6 +44,14 @@ class _CustomCardState extends State<CustomCard> {
     _decodedImage = _isBase64 ? _decodeImage(widget.imageUrl) : null;
   }
 
+  @override
+  void didUpdateWidget(CustomCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.favorites != widget.favorites) {
+      _isFavorite = widget.favorites;
+    }
+  }
+
   Uint8List? _decodeImage(String imageUrl) {
     try {
       return base64Decode(
@@ -68,9 +76,7 @@ class _CustomCardState extends State<CustomCard> {
         setState(() {
           _isFavorite = !_isFavorite;
         });
-        if (widget.onFavoriteChanged != null) {
-          widget.onFavoriteChanged!(_isFavorite);
-        }
+        widget.onFavoriteChanged?.call(_isFavorite);
       }
     } catch (e) {
       print("Error toggling favorite: $e");
