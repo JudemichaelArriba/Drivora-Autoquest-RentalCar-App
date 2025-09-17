@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   List<Car> filteredCars = [];
   bool isLoading = true;
   String selectedCategory = "All";
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -46,17 +47,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void filterByCategory(String category) {
+  void filterCars({String? category, String? query}) {
+    String q = query?.toLowerCase() ?? '';
+    String cat = category ?? selectedCategory;
+
     setState(() {
-      selectedCategory = category;
-      if (category == "All") {
-        filteredCars = cars;
-      } else {
-        filteredCars = cars
-            .where((car) => car.carCategory == category)
-            .toList();
-      }
+      selectedCategory = cat;
+      filteredCars = cars.where((car) {
+        final matchesCategory = cat == "All" || car.carCategory == cat;
+        final matchesQuery = car.carName.toLowerCase().contains(q);
+        return matchesCategory && matchesQuery;
+      }).toList();
     });
+  }
+
+  void filterByCategory(String category) {
+    filterCars(category: category, query: searchController.text);
   }
 
   @override
@@ -99,10 +105,14 @@ class _HomePageState extends State<HomePage> {
                         left: -5,
                         right: 60,
                         child: Widgetsearchbar(
+                          controller: searchController,
+                          hintText: "Search for cars...",
+                          onChanged: (text) {
+                            filterCars(query: text);
+                          },
                           height: 50,
                           borderRadius: 15,
                           width: 130,
-                          hintText: "Search for cars...",
                         ),
                       ),
                       if (!isLoading)

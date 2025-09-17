@@ -19,6 +19,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   List<Car> filteredCars = [];
   bool isLoading = true;
   String selectedCategory = "All";
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -45,17 +46,22 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
   }
 
-  void filterByCategory(String category) {
+  void filterFavorites({String? category, String? query}) {
+    String q = query?.toLowerCase() ?? '';
+    String cat = category ?? selectedCategory;
+
     setState(() {
-      selectedCategory = category;
-      if (category == "All") {
-        filteredCars = favoriteCars;
-      } else {
-        filteredCars = favoriteCars
-            .where((car) => car.carCategory == category)
-            .toList();
-      }
+      selectedCategory = cat;
+      filteredCars = favoriteCars.where((car) {
+        final matchesCategory = cat == "All" || car.carCategory == cat;
+        final matchesQuery = car.carName.toLowerCase().contains(q);
+        return matchesCategory && matchesQuery;
+      }).toList();
     });
+  }
+
+  void filterByCategory(String category) {
+    filterFavorites(category: category, query: searchController.text);
   }
 
   @override
@@ -82,10 +88,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         left: 0,
                         right: 0,
                         child: Widgetsearchbar(
+                          controller: searchController,
+                          hintText: "Search favorites...",
+                          onChanged: (text) {
+                            filterFavorites(query: text);
+                          },
                           height: 50,
                           borderRadius: 15,
                           width: 130,
-                          hintText: "Search favorites...",
                         ),
                       ),
                       if (!isLoading)

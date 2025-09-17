@@ -6,7 +6,7 @@ class Widgetsearchbar extends StatelessWidget {
   final TextEditingController? controller;
   final double? height;
   final double? width;
-  final double? borderRadius; // new optional parameter
+  final double? borderRadius;
 
   const Widgetsearchbar({
     super.key,
@@ -15,13 +15,13 @@ class Widgetsearchbar extends StatelessWidget {
     this.controller,
     this.height,
     this.width,
-    this.borderRadius, // accept borderRadius
+    this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
     final double barHeight = height ?? 50;
-    final double radius = borderRadius ?? 30; // default radius 30
+    final double radius = borderRadius ?? 30;
 
     return Container(
       height: barHeight,
