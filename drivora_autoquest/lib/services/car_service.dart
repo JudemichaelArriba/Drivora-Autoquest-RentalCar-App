@@ -45,4 +45,13 @@ class CarService {
       throw Exception('Error unmarking favorite: $e');
     }
   }
+
+  Future<List<dynamic>> getFavoriteCars() async {
+    try {
+      final data = await api.getData('get_favorite_cars.php');
+      return data;
+    } catch (e) {
+      throw Exception('Failed to fetch favorite cars: $e');
+    }
+  }
 }

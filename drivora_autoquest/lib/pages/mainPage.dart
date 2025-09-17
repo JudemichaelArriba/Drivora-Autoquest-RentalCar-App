@@ -16,7 +16,7 @@ class MainPage extends StatelessWidget {
 
   final List<Widget> pages = [
     const HomePage(),
-    const Favoritespage(),
+    const FavoritesPage(),
     const BookingsPage(),
     const PaymentsPage(),
     const ProfilePage(),
