@@ -33,14 +33,12 @@ class _HomePageState extends State<HomePage> {
       final carService = CarService(api: apiConnection);
       final data = await carService.getCars();
       final carList = data.map<Car>((json) => Car.fromJson(json)).toList();
-
       setState(() {
         cars = carList;
         filteredCars = carList;
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching cars: $e');
       setState(() {
         isLoading = false;
       });
@@ -50,7 +48,6 @@ class _HomePageState extends State<HomePage> {
   void filterCars({String? category, String? query}) {
     String q = query?.toLowerCase() ?? '';
     String cat = category ?? selectedCategory;
-
     setState(() {
       selectedCategory = cat;
       filteredCars = cars.where((car) {
@@ -68,8 +65,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    ImageProvider<Object> profileImage;
 
-    ImageProvider profileImage;
     if (user != null && user.photoURL != null && user.photoURL!.isNotEmpty) {
       profileImage = NetworkImage(user.photoURL!);
     } else {
@@ -154,8 +151,8 @@ class _HomePageState extends State<HomePage> {
                             : "https://via.placeholder.com/150",
                         rentPrice: "₱${car.rentPrice}",
                         favorites: car.favorites,
-                        onButtonPressed: () {
-                          Navigator.push(
+                        onButtonPressed: () async {
+                          final updatedFav = await Navigator.push<bool>(
                             context,
                             PageRouteBuilder(
                               transitionDuration: const Duration(
@@ -224,10 +221,24 @@ class _HomePageState extends State<HomePage> {
                                   },
                             ),
                           );
+
+                          if (updatedFav != null) {
+                            setState(() {
+                              car.favorites = updatedFav;
+                              final originalCar = cars.firstWhere(
+                                (c) => c.carId == car.carId,
+                              );
+                              originalCar.favorites = updatedFav;
+                            });
+                          }
                         },
                         onFavoriteChanged: (isFav) {
                           setState(() {
                             car.favorites = isFav;
+                            final originalCar = cars.firstWhere(
+                              (c) => c.carId == car.carId,
+                            );
+                            originalCar.favorites = isFav;
                           });
                         },
                       ),

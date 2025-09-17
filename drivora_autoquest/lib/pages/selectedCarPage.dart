@@ -45,10 +45,8 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize favorite from the passed value
     _isFavorite = widget.favorites;
 
-    // Decode images here (keeps the UI identical)
     _decodedImages = [
       _decodeBase64(widget.imageUrl1),
       _decodeBase64(widget.imageUrl2),
@@ -129,7 +127,6 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
       }
 
       if (!success) {
-        // revert if not success
         setState(() {
           _isFavorite = !_isFavorite;
         });
@@ -138,7 +135,6 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
         );
       }
     } catch (e) {
-      // revert and show error
       setState(() {
         _isFavorite = !_isFavorite;
       });
@@ -148,238 +144,246 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
     }
   }
 
+  void _popPage() {
+    Navigator.pop(context, _isFavorite);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey.shade200,
-      body: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 250,
-            pinned: true,
-            backgroundColor: Colors.black,
-            leading: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-
-                onPressed: () => Navigator.pop(context, _isFavorite),
-              ),
-            ),
-            actions: [
-              Container(
+    return WillPopScope(
+      onWillPop: () async {
+        _popPage();
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey.shade200,
+        body: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 250,
+              pinned: true,
+              backgroundColor: Colors.black,
+              leading: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.5),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: Icon(
-                    _isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: _isFavorite ? Colors.red : Colors.white,
-                  ),
-                  onPressed: _toggleFavorite,
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: _popPage,
                 ),
               ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                children: [
-                  PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      if (_currentPage != index) {
-                        setState(() {
-                          _currentPage = index;
-                        });
-                      }
-                    },
-                    children: [
-                      _buildImage(_decodedImages[0]),
-                      _buildImage(_decodedImages[1]),
-                      _buildImage(_decodedImages[2]),
-                    ],
+              actions: [
+                Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
                   ),
-                  Positioned(
-                    bottom: 10,
-                    left: 0,
-                    right: 0,
-                    child: _buildDotIndicator(),
+                  child: IconButton(
+                    icon: Icon(
+                      _isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: _isFavorite ? Colors.red : Colors.white,
+                    ),
+                    onPressed: _toggleFavorite,
                   ),
-                ],
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  children: [
+                    PageView(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        if (_currentPage != index) {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                        }
+                      },
+                      children: [
+                        _buildImage(_decodedImages[0]),
+                        _buildImage(_decodedImages[1]),
+                        _buildImage(_decodedImages[2]),
+                      ],
+                    ),
+                    Positioned(
+                      bottom: 10,
+                      left: 0,
+                      right: 0,
+                      child: _buildDotIndicator(),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  color: Colors.white,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.title,
-                              style: const TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                "₱${widget.rentPrice}",
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.title,
                                 style: const TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 30,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFFF7A30),
+                                  letterSpacing: -0.5,
+                                  color: Colors.black87,
                                 ),
                               ),
-                              const Text(
-                                "/day",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "₱${widget.rentPrice}",
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFFF7A30),
+                                  ),
+                                ),
+                                const Text(
+                                  "/day",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Divider(
+                          color: Colors.grey.shade300,
+                          thickness: 1,
+                          height: 1,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildDetailTile(
+                          icon: Icons.directions_car_filled,
+                          label: "Brand",
+                          value: widget.carBrand,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailTile(
+                          icon: Icons.category,
+                          label: "Category",
+                          value: widget.carCategory,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailTile(
+                          icon: Icons.description,
+                          label: "Description",
+                          value: widget.carDescription,
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF7A30),
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: const Icon(
+                                  Icons.car_rental,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Drivora Autoquest',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _showRentalRulesDialog,
+                                child: const Text(
+                                  'Rental rules >',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Divider(
-                        color: Colors.grey.shade300,
-                        thickness: 1,
-                        height: 1,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildDetailTile(
-                        icon: Icons.directions_car_filled,
-                        label: "Brand",
-                        value: widget.carBrand,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDetailTile(
-                        icon: Icons.category,
-                        label: "Category",
-                        value: widget.carCategory,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDetailTile(
-                        icon: Icons.description,
-                        label: "Description",
-                        value: widget.carDescription,
-                      ),
-                      const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFF7A30),
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              child: const Icon(
-                                Icons.car_rental,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Drivora Autoquest',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _showRentalRulesDialog,
-                              child: const Text(
-                                'Rental rules >',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF7A30),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (!_agreedToRules) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Please read and accept the Rental Rules first.",
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF7A30),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () {
-                        if (!_agreedToRules) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "Please read and accept the Rental Rules first.",
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                      },
-                      child: const Text(
-                        'Book Now',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                            );
+                            return;
+                          }
+                        },
+                        child: const Text(
+                          'Book Now',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

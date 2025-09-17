@@ -20,6 +20,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   bool isLoading = true;
   String selectedCategory = "All";
   final TextEditingController searchController = TextEditingController();
+  final Map<int, bool> removingMap = {};
 
   @override
   void initState() {
@@ -62,6 +63,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   void filterByCategory(String category) {
     filterFavorites(category: category, query: searchController.text);
+  }
+
+  void removeFavorite(Car car) {
+    setState(() {
+      removingMap[car.carId] = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      setState(() {
+        favoriteCars.removeWhere((c) => c.carId == car.carId);
+        filteredCars.removeWhere((c) => c.carId == car.carId);
+        removingMap.remove(car.carId);
+      });
+    });
   }
 
   @override
@@ -133,93 +148,121 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   itemCount: filteredCars.length,
                   itemBuilder: (context, index) {
                     final car = filteredCars[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: CustomCard(
-                        key: ValueKey(car.carId),
-                        carId: car.carId,
-                        title: car.carName,
-                        imageUrl: car.imageBase64_1 != null
-                            ? "data:image/png;base64,${car.imageBase64_1}"
-                            : "https://via.placeholder.com/150",
-                        rentPrice: "₱${car.rentPrice}",
-                        favorites: car.favorites,
-                        onButtonPressed: () {
-                          Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                              transitionDuration: const Duration(
-                                milliseconds: 380,
-                              ),
-                              reverseTransitionDuration: const Duration(
-                                milliseconds: 200,
-                              ),
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) =>
-                                      SelectedCarPage(
-                                        carId: car.carId,
-                                        title: car.carName,
-                                        imageUrl1: car.imageBase64_1 ?? "",
-                                        imageUrl2: car.imageBase64_2 ?? "",
-                                        imageUrl3: car.imageBase64_3 ?? "",
-                                        rentPrice: "${car.rentPrice}",
-                                        carBrand: car.carBrand.isNotEmpty
-                                            ? car.carBrand
-                                            : "Unknown brand",
-                                        carDescription:
-                                            car.carDescription.isNotEmpty
-                                            ? car.carDescription
-                                            : "No description available",
-                                        carCategory: car.carCategory.isNotEmpty
-                                            ? car.carCategory
-                                            : "Uncategorized",
-                                        favorites: car.favorites,
-                                      ),
-                              transitionsBuilder:
-                                  (
-                                    context,
-                                    animation,
-                                    secondaryAnimation,
-                                    child,
-                                  ) {
-                                    final scaleAnimation =
-                                        Tween<double>(
-                                          begin: 0.8,
-                                          end: 1.0,
-                                        ).animate(
-                                          CurvedAnimation(
-                                            parent: animation,
-                                            curve: Curves.easeOut,
-                                            reverseCurve: Curves.easeIn,
-                                          ),
-                                        );
-                                    final fadeAnimation =
-                                        Tween<double>(
-                                          begin: 0.0,
-                                          end: 1.0,
-                                        ).animate(
-                                          CurvedAnimation(
-                                            parent: animation,
-                                            curve: Curves.easeOut,
-                                            reverseCurve: Curves.easeIn,
-                                          ),
-                                        );
-                                    return ScaleTransition(
-                                      scale: scaleAnimation,
-                                      child: FadeTransition(
-                                        opacity: fadeAnimation,
-                                        child: child,
+                    final isRemoving = removingMap[car.carId] ?? false;
+
+                    return AnimatedOpacity(
+                      key: ValueKey(car.carId),
+                      opacity: isRemoving ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: isRemoving
+                            ? const SizedBox.shrink()
+                            : Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: CustomCard(
+                                  carId: car.carId,
+                                  title: car.carName,
+                                  imageUrl: car.imageBase64_1 != null
+                                      ? "data:image/png;base64,${car.imageBase64_1}"
+                                      : "https://via.placeholder.com/150",
+                                  rentPrice: "₱${car.rentPrice}",
+                                  favorites: car.favorites,
+                                  onButtonPressed: () async {
+                                    final result = await Navigator.push<bool>(
+                                      context,
+                                      PageRouteBuilder(
+                                        transitionDuration: const Duration(
+                                          milliseconds: 380,
+                                        ),
+                                        reverseTransitionDuration:
+                                            const Duration(milliseconds: 200),
+                                        pageBuilder:
+                                            (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                            ) => SelectedCarPage(
+                                              carId: car.carId,
+                                              title: car.carName,
+                                              imageUrl1:
+                                                  car.imageBase64_1 ?? "",
+                                              imageUrl2:
+                                                  car.imageBase64_2 ?? "",
+                                              imageUrl3:
+                                                  car.imageBase64_3 ?? "",
+                                              rentPrice: "${car.rentPrice}",
+                                              carBrand: car.carBrand.isNotEmpty
+                                                  ? car.carBrand
+                                                  : "Unknown brand",
+                                              carDescription:
+                                                  car.carDescription.isNotEmpty
+                                                  ? car.carDescription
+                                                  : "No description available",
+                                              carCategory:
+                                                  car.carCategory.isNotEmpty
+                                                  ? car.carCategory
+                                                  : "Uncategorized",
+                                              favorites: car.favorites,
+                                            ),
+                                        transitionsBuilder:
+                                            (
+                                              context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child,
+                                            ) {
+                                              final scaleAnimation =
+                                                  Tween<double>(
+                                                    begin: 0.8,
+                                                    end: 1.0,
+                                                  ).animate(
+                                                    CurvedAnimation(
+                                                      parent: animation,
+                                                      curve: Curves.easeOut,
+                                                      reverseCurve:
+                                                          Curves.easeIn,
+                                                    ),
+                                                  );
+                                              final fadeAnimation =
+                                                  Tween<double>(
+                                                    begin: 0.0,
+                                                    end: 1.0,
+                                                  ).animate(
+                                                    CurvedAnimation(
+                                                      parent: animation,
+                                                      curve: Curves.easeOut,
+                                                      reverseCurve:
+                                                          Curves.easeIn,
+                                                    ),
+                                                  );
+                                              return ScaleTransition(
+                                                scale: scaleAnimation,
+                                                child: FadeTransition(
+                                                  opacity: fadeAnimation,
+                                                  child: child,
+                                                ),
+                                              );
+                                            },
                                       ),
                                     );
+
+                                    if (result == false) {
+                                      removeFavorite(car);
+                                    }
                                   },
-                            ),
-                          );
-                        },
-                        onFavoriteChanged: (isFav) {
-                          setState(() {
-                            car.favorites = isFav;
-                          });
-                        },
+                                  onFavoriteChanged: (isFav) {
+                                    if (!isFav) {
+                                      removeFavorite(car);
+                                    } else {
+                                      setState(() {
+                                        car.favorites = isFav;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
                       ),
                     );
                   },
