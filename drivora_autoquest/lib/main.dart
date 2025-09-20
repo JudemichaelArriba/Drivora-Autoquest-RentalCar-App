@@ -1,5 +1,6 @@
-import 'package:drivora_autoquest/pages/login_page.dart';
-import 'package:drivora_autoquest/components/onboardingScreen.dart';
+// import 'package:drivora_autoquest/pages/login_page.dart';
+// import 'package:drivora_autoquest/components/onboardingScreen.dart';
+import 'package:drivora_autoquest/services/authWrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
 
-      home: const OnboardingScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

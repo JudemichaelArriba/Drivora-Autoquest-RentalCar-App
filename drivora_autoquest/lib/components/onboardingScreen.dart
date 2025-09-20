@@ -1,6 +1,7 @@
 import 'package:drivora_autoquest/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -31,6 +32,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
   ];
 
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("onboarding_completed", true);
+    Get.off(() => const LoginPage());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +67,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Car image
                           AnimatedOpacity(
                             duration: const Duration(milliseconds: 500),
                             opacity: currentPage == index ? 1.0 : 0.0,
@@ -148,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     onPressed: () {
                       if (currentPage == onboardingData.length - 1) {
-                        Get.off(() => const LoginPage());
+                        _completeOnboarding();
                       } else {
                         _pageController.nextPage(
                           duration: const Duration(milliseconds: 500),
@@ -171,13 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: 15),
               TextButton(
-                onPressed: () => Get.off(
-                  () => const LoginPage(),
-                  transition: Transition.fadeIn, // animation type
-                  duration: const Duration(
-                    milliseconds: 800,
-                  ), // animation speed
-                ),
+                onPressed: _completeOnboarding,
                 child: const Text(
                   'Skip',
                   style: TextStyle(
@@ -186,7 +186,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
             ],
           ),
