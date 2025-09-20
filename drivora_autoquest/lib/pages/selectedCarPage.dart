@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:drivora_autoquest/components/my_button.dart';
 import 'package:drivora_autoquest/components/rentalRulesDialog.dart';
+import 'package:drivora_autoquest/pages/credentialPage.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class SelectedCarPage extends StatefulWidget {
   final int carId;
@@ -346,37 +349,25 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                   const Spacer(),
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF7A30),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (!_agreedToRules) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Please read and accept the Rental Rules first.",
-                                ),
+                    child: MyButton(
+                      text: "Book Now",
+                      cornerRadius: 25,
+                      buttonWidth: 400,
+                      buttonHeight: 55,
+                      onPressed: () {
+                        if (!_agreedToRules) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Please read and accept the Rental Rules first.",
                               ),
-                            );
-                            return;
-                          }
-                        },
-                        child: const Text(
-                          'Book Now',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        Get.to(CredentialPage());
+                      },
                     ),
                   ),
                 ],

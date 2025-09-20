@@ -24,7 +24,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Future<void> _checkOnboardingSeen() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      seenOnboarding = prefs.getBool('seenOnboarding') ?? false;
+      seenOnboarding = prefs.getBool('onboarding_completed') ?? false;
     });
   }
 
