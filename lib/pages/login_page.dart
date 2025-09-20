@@ -194,6 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 30),
                       MyButton(
                         text: 'Login',
+                        buttonWidth: 300,
                         onPressed: () async {
                           await _handleEmailLogin(context);
                         },
