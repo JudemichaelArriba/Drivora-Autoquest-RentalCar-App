@@ -1,0 +1,55 @@
+import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'api_connection.dart';
+
+class UserService {
+  final ApiService api;
+
+  UserService({required this.api});
+
+  /// Add user with real image files (not base64)
+  Future<bool> addUserWithFiles({
+    required String uid,
+    required String email,
+    required String contactNumber1,
+    required String contactNumber2,
+    required File driversLicenseFront,
+    required File driversLicenseBack,
+  }) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/add_userCredentials.php');
+      var request = http.MultipartRequest('POST', uri);
+
+      request.fields['uid'] = uid;
+      request.fields['email'] = email;
+      request.fields['contact_number1'] = contactNumber1;
+      request.fields['contact_number2'] = contactNumber2;
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'drivers_license_front',
+          driversLicenseFront.path,
+        ),
+      );
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'drivers_license_back',
+          driversLicenseBack.path,
+        ),
+      );
+
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+      var jsonResponse = jsonDecode(responseBody);
+
+      if (jsonResponse['success'] == true) {
+        return true;
+      } else {
+        throw Exception(jsonResponse['error'] ?? 'Failed to add user');
+      }
+    } catch (e) {
+      throw Exception('Error adding user: $e');
+    }
+  }
+}

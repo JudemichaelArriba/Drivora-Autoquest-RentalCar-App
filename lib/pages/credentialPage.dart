@@ -1,10 +1,17 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:drivora_autoquest/components/my_numberTextfield.dart';
 import 'package:drivora_autoquest/components/dateChooser.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
+import 'package:drivora_autoquest/services/user_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
+
+final UserService _userService = UserService(api: apiConnection);
 
 class CredentialPage extends StatefulWidget {
   const CredentialPage({super.key});
@@ -196,10 +203,79 @@ class _CredentialPageState extends State<CredentialPage> {
                     ),
                   ),
                   onPressed: _isFormValid
-                      ? () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Form submitted")),
+                      ? () async {
+                          final User? user = FirebaseAuth.instance.currentUser;
+                          if (user == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("User not logged in"),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (_frontImage == null || _backImage == null) return;
+
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
                           );
+
+                          try {
+                            var uri = Uri.parse(
+                              '${apiConnection.baseUrl}/add_userCredentials.php',
+                            );
+                            var request = http.MultipartRequest('POST', uri);
+
+                            request.fields['uid'] = user.uid;
+                            request.fields['email'] = user.email!;
+                            request.fields['contact_number1'] =
+                                _contact1Controller.text.trim();
+                            request.fields['contact_number2'] =
+                                _contact2Controller.text.trim();
+
+                            request.files.add(
+                              await http.MultipartFile.fromPath(
+                                'drivers_license_front',
+                                _frontImage!.path,
+                              ),
+                            );
+                            request.files.add(
+                              await http.MultipartFile.fromPath(
+                                'drivers_license_back',
+                                _backImage!.path,
+                              ),
+                            );
+
+                            var response = await request.send();
+                            var responseBody = await response.stream
+                                .bytesToString();
+
+                            Navigator.pop(context);
+
+                            var jsonResponse = jsonDecode(responseBody);
+                            if (jsonResponse['success'] == true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("User added successfully"),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Failed: ${jsonResponse['error']}",
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            Navigator.pop(context);
+                            print("Failed to add user: $e");
+                          }
                         }
                       : null,
                   child: const Text(
