@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:drivora_autoquest/components/contactTextField.dart';
+import 'package:drivora_autoquest/components/my_numberTextfield.dart';
+import 'package:drivora_autoquest/components/dateChooser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,9 +14,8 @@ class CredentialPage extends StatefulWidget {
 }
 
 class _CredentialPageState extends State<CredentialPage> {
-  DateTime? _selectedDate;
-  String? _selectedPlacement1 = "Front";
-  String? _selectedPlacement2 = "Back";
+  DateTime? _pickupDate;
+  DateTime? _returnDate;
 
   final TextEditingController _contact1Controller = TextEditingController();
   final TextEditingController _contact2Controller = TextEditingController();
@@ -40,7 +40,8 @@ class _CredentialPageState extends State<CredentialPage> {
   }
 
   bool get _isFormValid {
-    return _selectedDate != null &&
+    return _pickupDate != null &&
+        _returnDate != null &&
         _contact1Controller.text.isNotEmpty &&
         _contact2Controller.text.isNotEmpty &&
         _frontImage != null &&
@@ -49,20 +50,6 @@ class _CredentialPageState extends State<CredentialPage> {
 
   void _onFieldsChanged() {
     setState(() {});
-  }
-
-  Future<void> _pickDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 
   Future<void> _pickImage(bool isFront, bool fromCamera) async {
@@ -95,10 +82,6 @@ class _CredentialPageState extends State<CredentialPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> availableOptions = _selectedPlacement1 == "Front"
-        ? ["Back"]
-        : ["Front"];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -126,16 +109,30 @@ class _CredentialPageState extends State<CredentialPage> {
                   children: [
                     const Text("Pick up time"),
                     const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () => _pickDate(context),
-                      child: _buildDateBox(_selectedDate),
+                    DateTimeChooser(
+                      selectedDateTime: _pickupDate,
+                      onDateTimeSelected: (dateTime) {
+                        setState(() {
+                          _pickupDate = dateTime;
+
+                          if (_returnDate != null &&
+                              _returnDate!.isBefore(_pickupDate!)) {
+                            _returnDate = null;
+                          }
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
                     const Text("Return Date"),
                     const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () => _pickDate(context),
-                      child: _buildDateBox(_selectedDate),
+                    DateTimeChooser(
+                      selectedDateTime: _returnDate,
+                      onDateTimeSelected: (dateTime) {
+                        setState(() {
+                          _returnDate = dateTime;
+                        });
+                      },
+                      firstDate: _pickupDate?.add(const Duration(minutes: 1)),
                     ),
                   ],
                 ),
@@ -149,12 +146,12 @@ class _CredentialPageState extends State<CredentialPage> {
                   children: [
                     const Text("Enter at least two contact numbers"),
                     const SizedBox(height: 12),
-                    ContactTextField(
+                    MyNumberTextField(
                       controller: _contact1Controller,
                       label: "Contact Number 1",
                     ),
                     const SizedBox(height: 12),
-                    ContactTextField(
+                    MyNumberTextField(
                       controller: _contact2Controller,
                       label: "Contact Number 2",
                     ),
@@ -206,7 +203,7 @@ class _CredentialPageState extends State<CredentialPage> {
                         }
                       : null,
                   child: const Text(
-                    "Submit",
+                    "Next",
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
@@ -214,27 +211,6 @@ class _CredentialPageState extends State<CredentialPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDateBox(DateTime? date) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            date == null
-                ? "Choose date"
-                : "${date.day}/${date.month}/${date.year}",
-          ),
-          const Icon(Icons.calendar_today, color: Color(0xFFFF7A30)),
-        ],
       ),
     );
   }
