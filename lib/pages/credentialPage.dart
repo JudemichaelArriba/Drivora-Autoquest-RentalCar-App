@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:drivora_autoquest/components/my_numberTextfield.dart';
 import 'package:drivora_autoquest/components/dateChooser.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
-import 'package:drivora_autoquest/services/user_service.dart';
+// import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 
-final UserService _userService = UserService(api: apiConnection);
+// final UserService _userService = UserService(api: apiConnection);
 
 class CredentialPage extends StatefulWidget {
   const CredentialPage({super.key});
