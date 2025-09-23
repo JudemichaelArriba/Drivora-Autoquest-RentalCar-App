@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:drivora_autoquest/components/my_button.dart';
 import 'package:drivora_autoquest/components/rentalRulesDialog.dart';
+import 'package:drivora_autoquest/pages/bookPage.dart';
 import 'package:drivora_autoquest/pages/credentialPage.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
+import 'package:drivora_autoquest/services/user_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -354,7 +357,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                       cornerRadius: 25,
                       buttonWidth: 400,
                       buttonHeight: 55,
-                      onPressed: () {
+                      onPressed: () async {
                         if (!_agreedToRules) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -365,8 +368,43 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                           );
                           return;
                         }
+                        final User? user = FirebaseAuth.instance.currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("User not logged in")),
+                          );
+                          return;
+                        }
+                        try {
+                          String uid = user.uid;
+                          String status = await checkUserStatus(uid);
 
-                        Get.to(CredentialPage());
+                          if (status ==
+                              "User exists and information is complete") {
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   const SnackBar(
+                            //     content: Text("Proceeding"),
+                            //   ),
+                            // );
+                            Get.to(Bookpage(carPrice: widget.rentPrice));
+                          } else if (status ==
+                                  "User exists but information is incomplete" ||
+                              status == "User does not exist") {
+                            Get.to(const CredentialPage());
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Unexpected status: $status"),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Failed to check user status: $e"),
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),

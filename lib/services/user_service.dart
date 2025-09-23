@@ -8,7 +8,6 @@ class UserService {
 
   UserService({required this.api});
 
-  /// Add user with real image files (not base64)
   Future<bool> addUserWithFiles({
     required String uid,
     required String email,
@@ -51,5 +50,23 @@ class UserService {
     } catch (e) {
       throw Exception('Error adding user: $e');
     }
+  }
+}
+
+Future<String> checkUserStatus(String uid) async {
+  try {
+    final data = await apiConnection.getData('findUser.php?uid=$uid');
+
+    if (data is Map<String, dynamic>) {
+      if (data.containsKey('status')) {
+        return data['status'] as String;
+      } else if (data.containsKey('error')) {
+        throw Exception(data['error']);
+      }
+    }
+
+    throw Exception('Unexpected response format: $data');
+  } catch (e) {
+    throw Exception('Failed to check user status: $e');
   }
 }

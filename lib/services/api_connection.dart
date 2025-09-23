@@ -7,7 +7,18 @@ class ApiService {
 
   ApiService({required this.baseUrl});
 
-  Future<List<dynamic>> getData(String endpoint) async {
+  // Future<List<dynamic>> getData(String endpoint) async {
+  //   final url = Uri.parse('$baseUrl/$endpoint');
+  //   final response = await http.get(url);
+
+  //   if (response.statusCode == 200) {
+  //     return jsonDecode(response.body);
+  //   } else {
+  //     throw Exception('Failed to load data from $endpoint');
+  //   }
+  // }
+
+  Future<dynamic> getData(String endpoint) async {
     final url = Uri.parse('$baseUrl/$endpoint');
     final response = await http.get(url);
 

@@ -1,17 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:drivora_autoquest/components/my_numberTextfield.dart';
-import 'package:drivora_autoquest/components/dateChooser.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
-// import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
-
-// final UserService _userService = UserService(api: apiConnection);
 
 class CredentialPage extends StatefulWidget {
   const CredentialPage({super.key});
@@ -21,9 +16,6 @@ class CredentialPage extends StatefulWidget {
 }
 
 class _CredentialPageState extends State<CredentialPage> {
-  DateTime? _pickupDate;
-  DateTime? _returnDate;
-
   final TextEditingController _contact1Controller = TextEditingController();
   final TextEditingController _contact2Controller = TextEditingController();
 
@@ -47,9 +39,7 @@ class _CredentialPageState extends State<CredentialPage> {
   }
 
   bool get _isFormValid {
-    return _pickupDate != null &&
-        _returnDate != null &&
-        _contact1Controller.text.isNotEmpty &&
+    return _contact1Controller.text.isNotEmpty &&
         _contact2Controller.text.isNotEmpty &&
         _frontImage != null &&
         _backImage != null;
@@ -110,43 +100,6 @@ class _CredentialPageState extends State<CredentialPage> {
             children: [
               _buildStepCard(
                 stepNumber: 1,
-                stepTitle: "Date Info",
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Pick up time"),
-                    const SizedBox(height: 8),
-                    DateTimeChooser(
-                      selectedDateTime: _pickupDate,
-                      onDateTimeSelected: (dateTime) {
-                        setState(() {
-                          _pickupDate = dateTime;
-
-                          if (_returnDate != null &&
-                              _returnDate!.isBefore(_pickupDate!)) {
-                            _returnDate = null;
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    const Text("Return Date"),
-                    const SizedBox(height: 8),
-                    DateTimeChooser(
-                      selectedDateTime: _returnDate,
-                      onDateTimeSelected: (dateTime) {
-                        setState(() {
-                          _returnDate = dateTime;
-                        });
-                      },
-                      firstDate: _pickupDate?.add(const Duration(minutes: 1)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildStepCard(
-                stepNumber: 2,
                 stepTitle: "Contact Numbers",
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +120,7 @@ class _CredentialPageState extends State<CredentialPage> {
               ),
               const SizedBox(height: 20),
               _buildStepCard(
-                stepNumber: 3,
+                stepNumber: 2,
                 stepTitle: "Upload Driver's License",
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
