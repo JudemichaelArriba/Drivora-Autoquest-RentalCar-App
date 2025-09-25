@@ -146,6 +146,7 @@ class _HomePageState extends State<HomePage> {
                         key: ValueKey(car.carId),
                         carId: car.carId,
                         title: car.carName,
+                        status: car.status,
                         imageUrl: car.imageBase64_1 != null
                             ? "data:image/png;base64,${car.imageBase64_1}"
                             : "https://via.placeholder.com/150",

@@ -10,6 +10,7 @@ class CustomCard extends StatefulWidget {
   final String imageUrl;
   final String rentPrice;
   final bool favorites;
+  final String status;
   final VoidCallback onButtonPressed;
   final ValueChanged<bool>? onFavoriteChanged;
 
@@ -20,6 +21,7 @@ class CustomCard extends StatefulWidget {
     required this.imageUrl,
     required this.rentPrice,
     required this.favorites,
+    required this.status,
     required this.onButtonPressed,
     this.onFavoriteChanged,
   });
@@ -36,6 +38,8 @@ class _CustomCardState extends State<CustomCard> {
       widget.imageUrl.isNotEmpty &&
       !widget.imageUrl.startsWith("http") &&
       !widget.imageUrl.startsWith("https");
+
+  bool get _isBooked => widget.status.toLowerCase() == "booked";
 
   @override
   void initState() {
@@ -63,6 +67,7 @@ class _CustomCardState extends State<CustomCard> {
   }
 
   Future<void> _toggleFavorite() async {
+    if (_isBooked) return;
     final carService = CarService(api: apiConnection);
     try {
       bool success;
@@ -117,6 +122,7 @@ class _CustomCardState extends State<CustomCard> {
           fit: StackFit.expand,
           children: [
             background,
+
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
@@ -158,7 +164,7 @@ class _CustomCardState extends State<CustomCard> {
                     _isFavorite ? Icons.favorite : Icons.favorite_border,
                     color: _isFavorite ? Colors.red : Colors.white,
                   ),
-                  onPressed: _toggleFavorite,
+                  onPressed: _isBooked ? null : _toggleFavorite,
                 ),
               ),
             ),
@@ -178,9 +184,11 @@ class _CustomCardState extends State<CustomCard> {
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: widget.onButtonPressed,
+                    onPressed: _isBooked ? null : widget.onButtonPressed,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF7A30),
+                      backgroundColor: _isBooked
+                          ? Colors.grey
+                          : const Color(0xFFFF7A30),
                       minimumSize: const Size(80, 35),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -200,6 +208,23 @@ class _CustomCardState extends State<CustomCard> {
                 ],
               ),
             ),
+
+            if (_isBooked)
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  "Not available at the moment.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

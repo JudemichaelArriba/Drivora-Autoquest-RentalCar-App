@@ -164,6 +164,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                 child: CustomCard(
                                   carId: car.carId,
                                   title: car.carName,
+                                  status: car.status,
                                   imageUrl: car.imageBase64_1 != null
                                       ? "data:image/png;base64,${car.imageBase64_1}"
                                       : "https://via.placeholder.com/150",
