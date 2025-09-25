@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
@@ -66,20 +67,68 @@ class _CustomCardState extends State<CustomCard> {
     }
   }
 
+  // Future<void> _toggleFavorite() async {
+  //   if (_isBooked) return;
+  //   final carService = CarService(api: apiConnection);
+  //   //new changes here
+  //   final String? uid = FirebaseAuth.instance.currentUser?.uid;
+  //   //new changes here
+  //   setState(() {
+  //     _isFavorite = !_isFavorite;
+  //   });
+
+  //   if (uid == null) {
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
+  //     return;
+  //   }
+
+  //   try {
+  //     bool success;
+  //     if (_isFavorite) {
+  //       success = await carService.unmarkAsFavorite(uid, widget.carId);
+  //     } else {
+  //       success = await carService.markAsFavorite(uid, widget.carId);
+  //     }
+
+  //     if (success) {
+  //       setState(() {
+  //         _isFavorite = !_isFavorite;
+  //       });
+  //       widget.onFavoriteChanged?.call(_isFavorite);
+  //     }
+  //   } catch (e) {
+  //     print("Error toggling favorite: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("Failed to update favorite")),
+  //     );
+  //   }
+  // }
+
   Future<void> _toggleFavorite() async {
     if (_isBooked) return;
     final carService = CarService(api: apiConnection);
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
+      return;
+    }
+
     try {
       bool success;
       if (_isFavorite) {
-        success = await carService.unmarkAsFavorite(widget.carId);
+        success = await carService.unmarkAsFavorite(uid, widget.carId);
       } else {
-        success = await carService.markAsFavorite(widget.carId);
+        success = await carService.markAsFavorite(uid, widget.carId);
       }
 
       if (success) {
         setState(() {
-          _isFavorite = !_isFavorite;
+          _isFavorite = !_isFavorite; // 👈 flip only after success
         });
         widget.onFavoriteChanged?.call(_isFavorite);
       }

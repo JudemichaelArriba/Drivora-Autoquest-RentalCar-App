@@ -5,6 +5,7 @@ import 'package:drivora_autoquest/models/car.dart';
 import 'package:drivora_autoquest/pages/selectedCarPage.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class FavoritesPage extends StatefulWidget {
@@ -29,9 +30,17 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Future<void> fetchFavoriteCars() async {
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
+      return;
+    }
     try {
       final carService = CarService(api: apiConnection);
-      final data = await carService.getFavoriteCars();
+      final data = await carService.getFavoriteCars(uid);
       final carList = data.map<Car>((json) => Car.fromJson(json)).toList();
 
       setState(() {
@@ -169,7 +178,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                       ? "data:image/png;base64,${car.imageBase64_1}"
                                       : "https://via.placeholder.com/150",
                                   rentPrice: "₱${car.rentPrice}",
-                                  favorites: car.favorites,
+                                  favorites: car.isFavorite,
                                   onButtonPressed: () async {
                                     final result = await Navigator.push<bool>(
                                       context,
@@ -205,7 +214,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                                   car.carCategory.isNotEmpty
                                                   ? car.carCategory
                                                   : "Uncategorized",
-                                              favorites: car.favorites,
+                                              favorites: car.isFavorite,
                                             ),
                                         transitionsBuilder:
                                             (
@@ -258,7 +267,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                       removeFavorite(car);
                                     } else {
                                       setState(() {
-                                        car.favorites = isFav;
+                                        car.isFavorite = isFav;
                                       });
                                     }
                                   },

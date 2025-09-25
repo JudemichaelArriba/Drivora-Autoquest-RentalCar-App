@@ -11,7 +11,7 @@ class Car {
   final String? imageBase64_3;
   final String status;
 
-  bool favorites;
+  bool isFavorite;
 
   Car({
     required this.carId,
@@ -25,7 +25,7 @@ class Car {
     this.imageBase64_2,
     this.imageBase64_3,
     required this.status,
-    this.favorites = false,
+    this.isFavorite = false,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) {
@@ -41,9 +41,9 @@ class Car {
       imageBase64_2: json['image_data2']?.toString(),
       imageBase64_3: json['image_data3']?.toString(),
       status: json['status'].toString(),
-      favorites:
-          json['favorites'].toString() == '1' ||
-          json['favorites'].toString().toLowerCase() == 'true',
+      isFavorite:
+          json['is_favorite'].toString() == '1' ||
+          json['is_favorite'].toString().toLowerCase() == 'true',
     );
   }
 
@@ -60,7 +60,7 @@ class Car {
       'image_data2': imageBase64_2,
       'image_data3': imageBase64_3,
       'status': status,
-      'favorites': favorites,
+      'is_favorite': isFavorite,
     };
   }
 }

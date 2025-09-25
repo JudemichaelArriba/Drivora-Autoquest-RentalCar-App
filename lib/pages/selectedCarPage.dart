@@ -120,16 +120,24 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
   Future<void> _toggleFavorite() async {
     final carService = CarService(api: apiConnection);
 
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+
     setState(() {
       _isFavorite = !_isFavorite;
     });
 
+    if (uid == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
+      return;
+    }
     try {
       bool success;
       if (_isFavorite) {
-        success = await carService.markAsFavorite(widget.carId);
+        success = await carService.markAsFavorite(uid, widget.carId);
       } else {
-        success = await carService.unmarkAsFavorite(widget.carId);
+        success = await carService.unmarkAsFavorite(uid, widget.carId);
       }
 
       if (!success) {

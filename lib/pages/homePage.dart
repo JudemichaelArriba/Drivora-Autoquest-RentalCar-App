@@ -2,11 +2,13 @@ import 'package:drivora_autoquest/components/custom_card.dart';
 import 'package:drivora_autoquest/components/categoryFilter.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:drivora_autoquest/models/car.dart';
+import 'package:drivora_autoquest/pages/profilePage.dart';
 import 'package:drivora_autoquest/pages/selectedCarPage.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,9 +31,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchCars() async {
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
+      return;
+    }
+
     try {
       final carService = CarService(api: apiConnection);
-      final data = await carService.getCars();
+      final data = await carService.getCars(uid);
       final carList = data.map<Car>((json) => Car.fromJson(json)).toList();
       setState(() {
         cars = carList;
@@ -91,10 +102,15 @@ class _HomePageState extends State<HomePage> {
                       Positioned(
                         top: 47,
                         right: 20,
-                        child: CircleAvatar(
-                          radius: 23,
-                          backgroundColor: Colors.white,
-                          backgroundImage: profileImage,
+                        child: GestureDetector(
+                          onTap: () {
+                            Get.to(() => const ProfilePage());
+                          },
+                          child: CircleAvatar(
+                            radius: 23,
+                            backgroundColor: Colors.white,
+                            backgroundImage: profileImage,
+                          ),
                         ),
                       ),
                       Positioned(
@@ -151,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                             ? "data:image/png;base64,${car.imageBase64_1}"
                             : "https://via.placeholder.com/150",
                         rentPrice: "₱${car.rentPrice}",
-                        favorites: car.favorites,
+                        favorites: car.isFavorite,
                         onButtonPressed: () async {
                           final updatedFav = await Navigator.push<bool>(
                             context,
@@ -181,7 +197,7 @@ class _HomePageState extends State<HomePage> {
                                         carCategory: car.carCategory.isNotEmpty
                                             ? car.carCategory
                                             : "Uncategorized",
-                                        favorites: car.favorites,
+                                        favorites: car.isFavorite,
                                       ),
                               transitionsBuilder:
                                   (
@@ -225,21 +241,21 @@ class _HomePageState extends State<HomePage> {
 
                           if (updatedFav != null) {
                             setState(() {
-                              car.favorites = updatedFav;
+                              car.isFavorite = updatedFav;
                               final originalCar = cars.firstWhere(
                                 (c) => c.carId == car.carId,
                               );
-                              originalCar.favorites = updatedFav;
+                              originalCar.isFavorite = updatedFav;
                             });
                           }
                         },
                         onFavoriteChanged: (isFav) {
                           setState(() {
-                            car.favorites = isFav;
+                            car.isFavorite = isFav;
                             final originalCar = cars.firstWhere(
                               (c) => c.carId == car.carId,
                             );
-                            originalCar.favorites = isFav;
+                            originalCar.isFavorite = isFav;
                           });
                         },
                       ),

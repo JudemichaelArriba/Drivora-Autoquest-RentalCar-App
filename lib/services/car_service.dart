@@ -5,18 +5,19 @@ class CarService {
 
   CarService({required this.api});
 
-  Future<List<dynamic>> getCars() async {
+  Future<List<dynamic>> getCars(String uid) async {
     try {
-      final data = await api.getData('get_cars.php');
+      final data = await api.postData('get_cars.php', {'uid': uid});
       return data;
     } catch (e) {
       throw Exception('Failed to fetch cars: $e');
     }
   }
 
-  Future<bool> markAsFavorite(int carId) async {
+  Future<bool> markAsFavorite(String uid, int carId) async {
     try {
       final response = await api.postData('mark_favorite.php', {
+        'uid': uid,
         'carId': carId.toString(),
       });
 
@@ -30,9 +31,10 @@ class CarService {
     }
   }
 
-  Future<bool> unmarkAsFavorite(int carId) async {
+  Future<bool> unmarkAsFavorite(String uid, int carId) async {
     try {
       final response = await api.postData('UnMarkCarAsFavorite.php', {
+        'uid': uid,
         'carId': carId.toString(),
       });
 
@@ -46,10 +48,17 @@ class CarService {
     }
   }
 
-  Future<List<dynamic>> getFavoriteCars() async {
+  Future<List<dynamic>> getFavoriteCars(String uid) async {
     try {
-      final data = await api.getData('get_favorite_cars.php');
-      return data;
+      final response = await api.postData('get_favorite_cars.php', {
+        'uid': uid,
+      });
+
+      if (response['success'] == true) {
+        return response['cars'] ?? [];
+      } else {
+        throw Exception(response['message'] ?? 'Failed to fetch favorite cars');
+      }
     } catch (e) {
       throw Exception('Failed to fetch favorite cars: $e');
     }
