@@ -1,14 +1,22 @@
-import 'dart:convert';
+// import 'dart:convert';
 import 'package:drivora_autoquest/components/dateChooser.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
+import 'package:drivora_autoquest/services/car_service.dart';
+// import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 
 class Bookpage extends StatefulWidget {
   final String carPrice;
-
-  const Bookpage({super.key, required this.carPrice});
+  final String uid;
+  final int carId;
+  const Bookpage({
+    super.key,
+    required this.carPrice,
+    required this.uid,
+    required this.carId,
+  });
 
   @override
   State<Bookpage> createState() => _BookpageState();
@@ -171,21 +179,44 @@ class _BookpageState extends State<Bookpage> {
           ),
           onPressed: _isFormValid
               ? () async {
-                  final User? user = FirebaseAuth.instance.currentUser;
-                  if (user == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("User not logged in")),
-                    );
-                    return;
-                  }
+                  final String uid = widget.uid;
+                  final int carId = widget.carId;
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "Booking submitted! Total: ₱$_totalCost for $_rentalDays days",
-                      ),
-                    ),
-                  );
+                  final String startDate = _pickupDate!.toIso8601String().split(
+                    'T',
+                  )[0];
+                  final String endDate = _returnDate!.toIso8601String().split(
+                    'T',
+                  )[0];
+
+                  final double totalPrice = _totalCost;
+
+                  try {
+                    final carService = CarService(api: apiConnection);
+
+                    final String bookingId = await carService.bookCar(
+                      uid: uid,
+                      carId: carId,
+                      startDate: startDate,
+                      endDate: endDate,
+                      totalPrice: totalPrice,
+                    );
+
+                    if (bookingId.isNotEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Booking successful!")),
+                      );
+                      Navigator.pop(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Booking failed")),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Booking error: $e")),
+                    );
+                  }
                 }
               : null,
           child: const Text(

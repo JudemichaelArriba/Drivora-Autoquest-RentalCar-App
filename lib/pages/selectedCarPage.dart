@@ -386,7 +386,17 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                             //     content: Text("Proceeding"),
                             //   ),
                             // );
-                            Get.to(Bookpage(carPrice: widget.rentPrice));
+                            if (user != null) {
+                              print(user.uid);
+                              print(widget.carId);
+                              Get.to(
+                                Bookpage(
+                                  carPrice: widget.rentPrice,
+                                  uid: user.uid,
+                                  carId: widget.carId,
+                                ),
+                              );
+                            }
                           } else if (status ==
                                   "User exists but information is incomplete" ||
                               status == "User does not exist") {

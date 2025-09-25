@@ -54,4 +54,30 @@ class CarService {
       throw Exception('Failed to fetch favorite cars: $e');
     }
   }
+
+  Future<String> bookCar({
+    required String uid,
+    required int carId,
+    required String startDate,
+    required String endDate,
+    required double totalPrice,
+  }) async {
+    try {
+      final response = await api.postData('addBooking.php', {
+        'uid': uid,
+        'carId': carId.toString(),
+        'start_date': startDate,
+        'end_date': endDate,
+        'total_price': totalPrice.toString(),
+      });
+
+      if (response['success'] == true) {
+        return response['bookingId'];
+      } else {
+        throw Exception(response['message'] ?? 'Failed to create booking');
+      }
+    } catch (e) {
+      throw Exception('Error creating booking: $e');
+    }
+  }
 }
