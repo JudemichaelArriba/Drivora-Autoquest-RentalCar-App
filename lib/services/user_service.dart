@@ -51,6 +51,26 @@ class UserService {
       throw Exception('Error adding user: $e');
     }
   }
+
+  Future<bool> addUserIfNotExists({
+    required String uid,
+    required String email,
+  }) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/add_userid_email.php');
+      var response = await http.post(uri, body: {'uid': uid, 'email': email});
+
+      var jsonResponse = jsonDecode(response.body);
+
+      if (jsonResponse['success'] == true) {
+        return true;
+      } else {
+        throw Exception(jsonResponse['error'] ?? 'Failed to add user');
+      }
+    } catch (e) {
+      throw Exception('Error adding user if not exists: $e');
+    }
+  }
 }
 
 Future<String> checkUserStatus(String uid) async {

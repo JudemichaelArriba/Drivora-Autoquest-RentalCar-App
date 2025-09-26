@@ -128,7 +128,7 @@ class _CustomCardState extends State<CustomCard> {
 
       if (success) {
         setState(() {
-          _isFavorite = !_isFavorite; // 👈 flip only after success
+          _isFavorite = !_isFavorite;
         });
         widget.onFavoriteChanged?.call(_isFavorite);
       }

@@ -3,8 +3,10 @@ import 'package:drivora_autoquest/components/square_tile.dart';
 import 'package:drivora_autoquest/components/my_textfield.dart';
 import 'package:drivora_autoquest/pages/forgotPasswordPage.dart';
 import 'package:drivora_autoquest/pages/signupPage.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/auth_service.dart';
 import 'package:drivora_autoquest/components/dialog_helper.dart';
+import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -58,6 +60,52 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  // Future<void> _handleEmailLogin(BuildContext context) async {
+  //   if (emailError != null) return;
+
+  //   final email = usernameController.text.trim();
+  //   final password = passwordController.text.trim();
+
+  //   if (email.isEmpty || password.isEmpty) {
+  //     DialogHelper.showErrorDialog(
+  //       context,
+  //       "Email and password cannot be empty.",
+  //     );
+  //     return;
+  //   }
+
+  //   var connectivityResult = await Connectivity().checkConnectivity();
+  //   if (connectivityResult == ConnectivityResult.none) {
+  //     DialogHelper.showErrorDialog(context, "No internet connection.");
+  //     return;
+  //   }
+
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => const Center(child: CircularProgressIndicator()),
+  //   );
+
+  //   try {
+  //     UserCredential user = await _authService.signInWithEmailAndPassword(
+  //       email,
+  //       password,
+  //     );
+  //     if (context.mounted) Navigator.pop(context);
+
+  //     DialogHelper.showSuccessDialog(
+  //       context,
+  //       "Welcome, ${user.user?.email}!",
+  //       onContinue: () {
+  //         Get.off(() => MainPage());
+  //       },
+  //     );
+  //   } catch (e) {
+  //     if (context.mounted) Navigator.pop(context);
+  //     DialogHelper.showErrorDialog(context, e.toString());
+  //   }
+  // }
+
   Future<void> _handleEmailLogin(BuildContext context) async {
     if (emailError != null) return;
 
@@ -89,6 +137,11 @@ class _LoginPageState extends State<LoginPage> {
         email,
         password,
       );
+
+      await UserService(
+        api: apiConnection,
+      ).addUserIfNotExists(uid: user.user!.uid, email: user.user!.email!);
+
       if (context.mounted) Navigator.pop(context);
 
       DialogHelper.showSuccessDialog(
@@ -231,11 +284,41 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
+
+                      // SquareTile(
+                      //   onTap: () async {
+                      //     try {
+                      //       UserCredential user = await _authService
+                      //           .signInWithGoogle();
+                      //       DialogHelper.showSuccessDialog(
+                      //         context,
+                      //         "Welcome, ${user.user?.displayName}!",
+                      //         onContinue: () {
+                      //           Get.off(
+                      //             () => MainPage(),
+                      //             transition: Transition.fade,
+                      //             duration: Duration(milliseconds: 1100),
+                      //           );
+                      //         },
+                      //       );
+                      //     } catch (e) {
+                      //       DialogHelper.showErrorDialog(context, e.toString());
+                      //     }
+                      //   },
+                      // ),
                       SquareTile(
                         onTap: () async {
                           try {
                             UserCredential user = await _authService
                                 .signInWithGoogle();
+
+                            await UserService(
+                              api: apiConnection,
+                            ).addUserIfNotExists(
+                              uid: user.user!.uid,
+                              email: user.user!.email!,
+                            );
+
                             DialogHelper.showSuccessDialog(
                               context,
                               "Welcome, ${user.user?.displayName}!",
@@ -252,6 +335,7 @@ class _LoginPageState extends State<LoginPage> {
                           }
                         },
                       ),
+
                       const SizedBox(height: 70),
                       RichText(
                         text: TextSpan(
