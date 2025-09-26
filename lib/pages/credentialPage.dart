@@ -1,15 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:drivora_autoquest/components/my_numberTextfield.dart';
+import 'package:drivora_autoquest/pages/bookPage.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 
 class CredentialPage extends StatefulWidget {
-  const CredentialPage({super.key});
+  final String carPrice;
+  final String uid;
+  final int carId;
+
+  const CredentialPage({
+    super.key,
+    required this.carPrice,
+    required this.uid,
+    required this.carId,
+  });
 
   @override
   State<CredentialPage> createState() => _CredentialPageState();
@@ -211,9 +222,17 @@ class _CredentialPageState extends State<CredentialPage> {
 
                             var jsonResponse = jsonDecode(responseBody);
                             if (jsonResponse['success'] == true) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("User added successfully"),
+                              // ScaffoldMessenger.of(context).showSnackBar(
+                              //   const SnackBar(
+                              //     content: Text("User added successfully"),
+                              //   ),
+                              // );
+
+                              Get.to(
+                                Bookpage(
+                                  carPrice: widget.carPrice,
+                                  uid: widget.uid,
+                                  carId: widget.carId,
                                 ),
                               );
                             } else {

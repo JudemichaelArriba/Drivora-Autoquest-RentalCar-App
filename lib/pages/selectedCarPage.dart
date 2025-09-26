@@ -408,7 +408,13 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                           } else if (status ==
                                   "User exists but information is incomplete" ||
                               status == "User does not exist") {
-                            Get.to(const CredentialPage());
+                            Get.to(
+                              CredentialPage(
+                                carPrice: widget.rentPrice,
+                                uid: user.uid,
+                                carId: widget.carId,
+                              ),
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
