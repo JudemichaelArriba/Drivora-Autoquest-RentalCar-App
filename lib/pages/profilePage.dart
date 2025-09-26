@@ -1,10 +1,11 @@
 import 'package:drivora_autoquest/components/dialog_helper.dart';
-import 'package:drivora_autoquest/pages/login_page.dart';
+import 'package:drivora_autoquest/pages/forgotPasswordPage.dart';
+// import 'package:drivora_autoquest/pages/login_page.dart';
 import 'package:drivora_autoquest/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
+// import 'package:get/utils.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -87,13 +88,14 @@ class ProfilePage extends StatelessWidget {
                           await FirebaseAuth.instance.sendPasswordResetEmail(
                             email: email,
                           );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Password reset email sent! Check your inbox.',
-                              ),
-                            ),
-                          );
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   const SnackBar(
+                          //     content: Text(
+                          //       'Password reset email sent! Check your inbox.',
+                          //     ),
+                          //   ),
+                          // );
+                          Get.to(ForgotPasswordPage());
                         }
                       },
                     ),
