@@ -1,5 +1,10 @@
+import 'package:drivora_autoquest/components/dialog_helper.dart';
+import 'package:drivora_autoquest/pages/login_page.dart';
+import 'package:drivora_autoquest/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
+import 'package:get/utils.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -53,26 +58,7 @@ class ProfilePage extends StatelessWidget {
               email,
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            const SizedBox(height: 16),
-
-            if (!isGoogleUser)
-              SizedBox(
-                width: 150,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF7A30),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Edit profile',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            if (!isGoogleUser) const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             Container(
               decoration: BoxDecoration(
@@ -129,7 +115,12 @@ class ProfilePage extends StatelessWidget {
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () async {
-                  await FirebaseAuth.instance.signOut();
+                  bool shouldLogout = await DialogHelper.showLogoutConfirmation(
+                    context,
+                  );
+                  if (shouldLogout) {
+                    await AuthService().signOut();
+                  }
                 },
               ),
             ),

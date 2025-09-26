@@ -1,4 +1,6 @@
+import 'package:drivora_autoquest/pages/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/route_manager.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -62,5 +64,19 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw Exception("Firebase Auth error: ${e.message}");
     }
+  }
+
+  Future<void> signOut() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      for (var provider in user.providerData) {
+        if (provider.providerId == 'google.com') {
+          await GoogleSignIn().signOut();
+          Get.off(LoginPage());
+        }
+      }
+    }
+    await _auth.signOut();
+    Get.off(LoginPage());
   }
 }

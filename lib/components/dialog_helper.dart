@@ -146,4 +146,27 @@ class DialogHelper {
       },
     );
   }
+
+  static Future<bool> showLogoutConfirmation(BuildContext context) async {
+    bool confirmed = false;
+
+    await QuickAlert.show(
+      context: context,
+      type: QuickAlertType.confirm,
+      text: 'Do you want to logout?',
+      confirmBtnText: 'Yes',
+      cancelBtnText: 'No',
+      confirmBtnColor: Colors.green,
+      onConfirmBtnTap: () {
+        confirmed = true;
+        Navigator.of(context).pop();
+      },
+      onCancelBtnTap: () {
+        confirmed = false;
+        Navigator.of(context).pop();
+      },
+    );
+
+    return confirmed;
+  }
 }
