@@ -71,6 +71,29 @@ class UserService {
       throw Exception('Error adding user if not exists: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getActiveBookings(String uid) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/GetActiveBookingsByUser.php');
+      var response = await http.post(uri, body: {'uid': uid});
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse is List) {
+          return List<Map<String, dynamic>>.from(jsonResponse);
+        } else if (jsonResponse is Map && jsonResponse.containsKey('error')) {
+          throw Exception(jsonResponse['error']);
+        } else {
+          throw Exception('Unexpected response format: $jsonResponse');
+        }
+      } else {
+        throw Exception('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching active bookings: $e');
+    }
+  }
 }
 
 Future<String> checkUserStatus(String uid) async {
