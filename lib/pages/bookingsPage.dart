@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:drivora_autoquest/components/categoryFilter.dart';
-
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 
@@ -39,7 +38,6 @@ class _BookingsPageState extends State<BookingsPage> {
     }
 
     try {
-      final carService = CarService(api: apiConnection);
       final data = await UserService(api: apiConnection).getActiveBookings(uid);
       setState(() {
         bookings = data;
@@ -77,6 +75,13 @@ class _BookingsPageState extends State<BookingsPage> {
   @override
   Widget build(BuildContext context) {
     final categories = <String>{for (var b in bookings) b['status']}.toList();
+
+    final upcomingCount = bookings
+        .where((b) => b['status']?.toString().toLowerCase() == 'pending')
+        .length;
+    final doneCount = bookings
+        .where((b) => b['status']?.toString().toLowerCase() == 'completed')
+        .length;
 
     return Column(
       children: [
@@ -124,43 +129,106 @@ class _BookingsPageState extends State<BookingsPage> {
             ],
           ),
         ),
+
         Expanded(
           child: isLoading
               ? const Center(
                   child: CircularProgressIndicator(color: Color(0xFFFF7A30)),
                 )
-              : filteredBookings.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No bookings yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-                  itemCount: filteredBookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = filteredBookings[index];
-                    return BookingCard(
-                      bookingId: booking['bookingId']?.toString() ?? 'N/A',
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 33),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildSummaryBox(
+                                'Upcoming',
+                                upcomingCount,
+                                Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildSummaryBox(
+                                'Done',
+                                doneCount,
+                                Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-                      startDate: booking['start_date']?.toString() ?? '-',
-                      endDate: booking['end_date']?.toString() ?? '-',
-                      totalPrice:
-                          double.tryParse(
-                            booking['total_price']?.toString() ?? '0',
-                          ) ??
-                          0.0,
-                      status: booking['status']?.toString() ?? 'Unknown',
-                      onDetailsPressed: () {},
-                      onCancelPressed: booking['status'] == "Pending"
-                          ? () {}
-                          : null,
-                    );
-                  },
+                      ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: filteredBookings.length,
+                        itemBuilder: (context, index) {
+                          final booking = filteredBookings[index];
+                          return BookingCard(
+                            bookingId:
+                                booking['bookingId']?.toString() ?? 'N/A',
+                            startDate: booking['start_date']?.toString() ?? '-',
+                            endDate: booking['end_date']?.toString() ?? '-',
+                            totalPrice:
+                                double.tryParse(
+                                  booking['total_price']?.toString() ?? '0',
+                                ) ??
+                                0.0,
+                            status: booking['status']?.toString() ?? 'Unknown',
+                            onDetailsPressed: () {},
+                            onCancelPressed:
+                                booking['status']?.toString().toLowerCase() ==
+                                    "pending"
+                                ? () {}
+                                : null,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSummaryBox(String label, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            count.toString(),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+        ],
+      ),
     );
   }
 }

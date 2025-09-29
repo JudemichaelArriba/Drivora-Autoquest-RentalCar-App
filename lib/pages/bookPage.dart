@@ -1,11 +1,7 @@
-// import 'dart:convert';
 import 'package:drivora_autoquest/components/dateChooser.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
-// import 'package:drivora_autoquest/services/api_connection.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
 
 class Bookpage extends StatefulWidget {
   final String carPrice;
@@ -25,6 +21,7 @@ class Bookpage extends StatefulWidget {
 class _BookpageState extends State<Bookpage> {
   DateTime? _pickupDate;
   DateTime? _returnDate;
+
   double get _carPricePerDay {
     final numericString = widget.carPrice.replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(numericString) ?? 0.0;
@@ -51,6 +48,15 @@ class _BookpageState extends State<Bookpage> {
 
   bool get _isFormValid {
     return _pickupDate != null && _returnDate != null && _rentalDays > 0;
+  }
+
+  String formatForMySQL(DateTime dt) {
+    return "${dt.year.toString().padLeft(4, '0')}-"
+        "${dt.month.toString().padLeft(2, '0')}-"
+        "${dt.day.toString().padLeft(2, '0')} "
+        "${dt.hour.toString().padLeft(2, '0')}:"
+        "${dt.minute.toString().padLeft(2, '0')}:"
+        "${dt.second.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -87,7 +93,6 @@ class _BookpageState extends State<Bookpage> {
                       onDateTimeSelected: (dateTime) {
                         setState(() {
                           _pickupDate = dateTime;
-
                           if (_returnDate != null &&
                               _returnDate!.isBefore(_pickupDate!)) {
                             _returnDate = null;
@@ -182,12 +187,9 @@ class _BookpageState extends State<Bookpage> {
                   final String uid = widget.uid;
                   final int carId = widget.carId;
 
-                  final String startDate = _pickupDate!.toIso8601String().split(
-                    'T',
-                  )[0];
-                  final String endDate = _returnDate!.toIso8601String().split(
-                    'T',
-                  )[0];
+                  // Use full DATETIME format for MySQL
+                  final String startDate = formatForMySQL(_pickupDate!);
+                  final String endDate = formatForMySQL(_returnDate!);
 
                   final double totalPrice = _totalCost;
 
