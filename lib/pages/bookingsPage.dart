@@ -7,8 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:drivora_autoquest/components/categoryFilter.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -21,6 +19,7 @@ class _BookingsPageState extends State<BookingsPage> {
   List<dynamic> bookings = [];
   List<dynamic> filteredBookings = [];
   bool isLoading = true;
+  bool isCancelling = false; // new loader state
   String selectedCategory = "All";
   final TextEditingController searchController = TextEditingController();
 
@@ -134,98 +133,124 @@ class _BookingsPageState extends State<BookingsPage> {
         ),
 
         Expanded(
-          child: isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFFF7A30)),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 33),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildSummaryBox(
-                                'Upcoming',
-                                upcomingCount,
-                                Colors.orange,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildSummaryBox(
-                                'Done',
-                                doneCount,
-                                Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
+          child: Stack(
+            children: [
+              isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFFF7A30),
                       ),
-                      const SizedBox(height: 16),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 33),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _buildSummaryBox(
+                                    'Upcoming',
+                                    upcomingCount,
+                                    Colors.orange,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildSummaryBox(
+                                    'Done',
+                                    doneCount,
+                                    Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
-                      ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: filteredBookings.length,
-                        itemBuilder: (context, index) {
-                          final booking = filteredBookings[index];
-                          return BookingCard(
-                            bookingId:
-                                booking['bookingId']?.toString() ?? 'N/A',
-                            startDate: booking['start_date']?.toString() ?? '-',
-                            endDate: booking['end_date']?.toString() ?? '-',
-                            totalPrice:
-                                double.tryParse(
-                                  booking['total_price']?.toString() ?? '0',
-                                ) ??
-                                0.0,
-                            status: booking['status']?.toString() ?? 'Unknown',
-                            onDetailsPressed: () {},
-                            onCancelPressed:
-                                booking['status']?.toString().toLowerCase() ==
-                                    "pending"
-                                ? () async {
-                                    final confirmed =
-                                        await DialogHelper.showLogoutConfirmation(
-                                          context,
-                                        );
-
-                                    if (confirmed) {
-                                      try {
-                                        final carService = CarService(
-                                          api: apiConnection,
-                                        );
-                                        final message = await carService
-                                            .cancelBooking(
-                                              booking['bookingId'].toString(),
+                          ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: filteredBookings.length,
+                            itemBuilder: (context, index) {
+                              final booking = filteredBookings[index];
+                              return BookingCard(
+                                bookingId:
+                                    booking['bookingId']?.toString() ?? 'N/A',
+                                startDate:
+                                    booking['start_date']?.toString() ?? '-',
+                                endDate: booking['end_date']?.toString() ?? '-',
+                                totalPrice:
+                                    double.tryParse(
+                                      booking['total_price']?.toString() ?? '0',
+                                    ) ??
+                                    0.0,
+                                status:
+                                    booking['status']?.toString() ?? 'Unknown',
+                                onDetailsPressed: () {},
+                                onCancelPressed:
+                                    booking['status']
+                                            ?.toString()
+                                            .toLowerCase() ==
+                                        "pending"
+                                    ? () async {
+                                        final confirmed =
+                                            await DialogHelper.showLogoutConfirmation(
+                                              context,
                                             );
 
-                                        DialogHelper.showSuccessDialog(
-                                          context,
-                                          message,
-                                          onContinue: () {
-                                            fetchBookings();
-                                          },
-                                        );
-                                      } catch (e) {
-                                        DialogHelper.showErrorDialog(
-                                          context,
-                                          "Error: $e",
-                                        );
+                                        if (confirmed) {
+                                          setState(() {
+                                            isCancelling = true;
+                                          });
+
+                                          try {
+                                            final carService = CarService(
+                                              api: apiConnection,
+                                            );
+                                            final message = await carService
+                                                .cancelBooking(
+                                                  booking['bookingId']
+                                                      .toString(),
+                                                );
+
+                                            DialogHelper.showSuccessDialog(
+                                              context,
+                                              message,
+                                              onContinue: () {
+                                                fetchBookings();
+                                              },
+                                            );
+                                          } catch (e) {
+                                            DialogHelper.showErrorDialog(
+                                              context,
+                                              "Error: $e",
+                                            );
+                                          } finally {
+                                            setState(() {
+                                              isCancelling = false;
+                                            });
+                                          }
+                                        }
                                       }
-                                    }
-                                  }
-                                : null,
-                          );
-                        },
+                                    : null,
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+              if (isCancelling)
+                Container(
+                  color: Colors.black.withOpacity(0.3),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFFF7A30)),
                   ),
                 ),
+            ],
+          ),
         ),
       ],
     );
