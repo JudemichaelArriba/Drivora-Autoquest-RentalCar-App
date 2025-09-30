@@ -208,7 +208,7 @@ class BookingCard extends StatelessWidget {
                       ElevatedButton(
                         onPressed: onCancelPressed,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
+                          backgroundColor: Colors.blue,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

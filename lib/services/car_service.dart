@@ -80,11 +80,7 @@ class CarService {
         'total_price': totalPrice.toString(),
       });
 
-      if (response['success'] == true) {
-        return response['bookingId'];
-      } else {
-        throw Exception(response['message'] ?? 'Failed to create booking');
-      }
+      return response['message'] ?? 'No response message';
     } catch (e) {
       throw Exception('Error creating booking: $e');
     }

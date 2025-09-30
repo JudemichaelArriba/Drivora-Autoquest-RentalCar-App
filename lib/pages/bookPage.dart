@@ -1,4 +1,5 @@
 import 'package:drivora_autoquest/components/dateChooser.dart';
+import 'package:drivora_autoquest/components/dialog_helper.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:flutter/material.dart';
@@ -187,7 +188,6 @@ class _BookpageState extends State<Bookpage> {
                   final String uid = widget.uid;
                   final int carId = widget.carId;
 
-                  // Use full DATETIME format for MySQL
                   final String startDate = formatForMySQL(_pickupDate!);
                   final String endDate = formatForMySQL(_returnDate!);
 
@@ -196,7 +196,7 @@ class _BookpageState extends State<Bookpage> {
                   try {
                     final carService = CarService(api: apiConnection);
 
-                    final String bookingId = await carService.bookCar(
+                    final String message = await carService.bookCar(
                       uid: uid,
                       carId: carId,
                       startDate: startDate,
@@ -204,23 +204,25 @@ class _BookpageState extends State<Bookpage> {
                       totalPrice: totalPrice,
                     );
 
-                    if (bookingId.isNotEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Booking successful!")),
+                    if (message.toLowerCase().contains("success")) {
+                      DialogHelper.showSuccessDialog(
+                        context,
+                        message,
+                        onContinue: () {
+                          Navigator.pop(context);
+                        },
                       );
-                      Navigator.pop(context);
+                    } else if (message.toLowerCase().contains("conflict")) {
+                      DialogHelper.showWarningDialog(context, message);
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Booking failed")),
-                      );
+                      DialogHelper.showErrorDialog(context, message);
                     }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Booking error: $e")),
-                    );
+                    DialogHelper.showErrorDialog(context, "Booking error: $e");
                   }
                 }
               : null,
+
           child: const Text(
             "Confirm Booking",
             style: TextStyle(color: Colors.white, fontSize: 16),
