@@ -1,11 +1,13 @@
 import 'package:drivora_autoquest/components/booking_card.dart';
+import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:drivora_autoquest/components/categoryFilter.dart';
-import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -185,7 +187,31 @@ class _BookingsPageState extends State<BookingsPage> {
                             onCancelPressed:
                                 booking['status']?.toString().toLowerCase() ==
                                     "pending"
-                                ? () {}
+                                ? () async {
+                                    try {
+                                      final carService = CarService(
+                                        api: apiConnection,
+                                      );
+                                      final message = await carService
+                                          .cancelBooking(
+                                            booking['bookingId'].toString(),
+                                          );
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(message)),
+                                      );
+
+                                      fetchBookings();
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text("Error: $e")),
+                                      );
+                                    }
+                                  }
                                 : null,
                           );
                         },

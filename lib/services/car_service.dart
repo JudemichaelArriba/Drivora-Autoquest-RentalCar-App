@@ -85,4 +85,20 @@ class CarService {
       throw Exception('Error creating booking: $e');
     }
   }
+
+  Future<String> cancelBooking(String bookingId) async {
+    try {
+      final response = await api.postData('cancelBooking.php', {
+        'bookingId': bookingId,
+      });
+
+      if (response['success'] == true) {
+        return response['message'] ?? 'Booking cancelled successfully';
+      } else {
+        throw Exception(response['message'] ?? 'Failed to cancel booking');
+      }
+    } catch (e) {
+      throw Exception('Error cancelling booking: $e');
+    }
+  }
 }
