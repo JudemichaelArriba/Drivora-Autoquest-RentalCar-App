@@ -1,4 +1,5 @@
 import 'package:drivora_autoquest/components/booking_card.dart';
+import 'package:drivora_autoquest/components/dialog_helper.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
@@ -188,28 +189,34 @@ class _BookingsPageState extends State<BookingsPage> {
                                 booking['status']?.toString().toLowerCase() ==
                                     "pending"
                                 ? () async {
-                                    try {
-                                      final carService = CarService(
-                                        api: apiConnection,
-                                      );
-                                      final message = await carService
-                                          .cancelBooking(
-                                            booking['bookingId'].toString(),
-                                          );
+                                    final confirmed =
+                                        await DialogHelper.showLogoutConfirmation(
+                                          context,
+                                        );
 
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(content: Text(message)),
-                                      );
+                                    if (confirmed) {
+                                      try {
+                                        final carService = CarService(
+                                          api: apiConnection,
+                                        );
+                                        final message = await carService
+                                            .cancelBooking(
+                                              booking['bookingId'].toString(),
+                                            );
 
-                                      fetchBookings();
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(content: Text("Error: $e")),
-                                      );
+                                        DialogHelper.showSuccessDialog(
+                                          context,
+                                          message,
+                                          onContinue: () {
+                                            fetchBookings();
+                                          },
+                                        );
+                                      } catch (e) {
+                                        DialogHelper.showErrorDialog(
+                                          context,
+                                          "Error: $e",
+                                        );
+                                      }
                                     }
                                   }
                                 : null,
