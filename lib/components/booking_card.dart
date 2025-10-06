@@ -205,22 +205,15 @@ class BookingCard extends StatelessWidget {
                   children: [
                     if (status.toLowerCase() == "pending" &&
                         onCancelPressed != null)
-                      ElevatedButton(
-                        onPressed: onCancelPressed,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                        ),
+                      GestureDetector(
+                        onTap: onCancelPressed,
                         child: const Text(
                           "Cancel",
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
                     const SizedBox(width: 12),

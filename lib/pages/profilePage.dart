@@ -1,11 +1,10 @@
 import 'package:drivora_autoquest/components/dialog_helper.dart';
 import 'package:drivora_autoquest/pages/forgotPasswordPage.dart';
-// import 'package:drivora_autoquest/pages/login_page.dart';
+import 'package:drivora_autoquest/pages/profileInfo.dart';
 import 'package:drivora_autoquest/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-// import 'package:get/utils.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -18,6 +17,7 @@ class ProfilePage extends StatelessWidget {
     String? photoUrl;
     String displayName = user?.displayName ?? 'User';
     String email = user?.email ?? 'example@mail.com';
+    String? uid = user?.uid;
 
     if (user != null) {
       for (var provider in user.providerData) {
@@ -69,33 +69,38 @@ class ProfilePage extends StatelessWidget {
               child: Column(
                 children: [
                   ListTile(
-                    leading: Icon(Icons.person, color: const Color(0xFFFF7A30)),
+                    leading: const Icon(Icons.person, color: Color(0xFFFF7A30)),
                     title: const Text('My Info'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {},
+                    onTap: () {
+                      if (uid != null) {
+                        Get.to(() => ProfileInfo(uid: uid, photoUrl: photoUrl));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'User ID not found. Please re-login.',
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   if (!isGoogleUser) ...[
                     const Divider(height: 1),
                     ListTile(
-                      leading: Icon(
+                      leading: const Icon(
                         Icons.lock_reset,
-                        color: const Color(0xFFFF7A30),
+                        color: Color(0xFFFF7A30),
                       ),
-                      title: const Text('Forget Password?'),
+                      title: const Text('Forgot Password?'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () async {
                         if (email.isNotEmpty) {
                           await FirebaseAuth.instance.sendPasswordResetEmail(
                             email: email,
                           );
-                          // ScaffoldMessenger.of(context).showSnackBar(
-                          //   const SnackBar(
-                          //     content: Text(
-                          //       'Password reset email sent! Check your inbox.',
-                          //     ),
-                          //   ),
-                          // );
-                          Get.to(ForgotPasswordPage());
+                          Get.to(() => const ForgotPasswordPage());
                         }
                       },
                     ),
@@ -103,6 +108,7 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
 
             Container(
@@ -111,7 +117,7 @@ class ProfilePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
-                leading: Icon(Icons.logout, color: const Color(0xFFFF7A30)),
+                leading: const Icon(Icons.logout, color: Color(0xFFFF7A30)),
                 title: const Text(
                   'Logout',
                   style: TextStyle(color: Colors.red),

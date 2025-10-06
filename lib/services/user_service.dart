@@ -94,6 +94,28 @@ class UserService {
       throw Exception('Error fetching active bookings: $e');
     }
   }
+
+  Future<Map<String, dynamic>> getUserById(String uid) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/GetUserById.php?uid=$uid');
+      var response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['status'] == 'success' &&
+            jsonResponse['data'] != null) {
+          return Map<String, dynamic>.from(jsonResponse['data']);
+        } else {
+          throw Exception(jsonResponse['message'] ?? 'User not found');
+        }
+      } else {
+        throw Exception('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching user by ID: $e');
+    }
+  }
 }
 
 Future<String> checkUserStatus(String uid) async {
