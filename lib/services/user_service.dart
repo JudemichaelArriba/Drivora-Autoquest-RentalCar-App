@@ -116,6 +116,49 @@ class UserService {
       throw Exception('Error fetching user by ID: $e');
     }
   }
+
+  Future<bool> updateUserProfile({
+    required String uid,
+    required String contactNumber1,
+    required String contactNumber2,
+    File? licenseFront,
+    File? licenseBack,
+  }) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/updateUser.php');
+      var request = http.MultipartRequest('POST', uri);
+
+      request.fields['uid'] = uid;
+      request.fields['contact_number1'] = contactNumber1;
+      request.fields['contact_number2'] = contactNumber2;
+
+      if (licenseFront != null && await licenseFront.exists()) {
+        request.files.add(
+          await http.MultipartFile.fromPath('license_front', licenseFront.path),
+        );
+      }
+
+      if (licenseBack != null && await licenseBack.exists()) {
+        request.files.add(
+          await http.MultipartFile.fromPath('license_back', licenseBack.path),
+        );
+      }
+
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+      var jsonResponse = jsonDecode(responseBody);
+
+      if (jsonResponse['success'] == true) {
+        return true;
+      } else {
+        throw Exception(
+          jsonResponse['message'] ?? 'Failed to update user profile',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error updating user profile: $e');
+    }
+  }
 }
 
 Future<String> checkUserStatus(String uid) async {

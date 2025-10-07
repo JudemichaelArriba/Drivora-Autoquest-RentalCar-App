@@ -1,7 +1,11 @@
 import 'dart:convert';
+import 'package:drivora_autoquest/components/my_button.dart';
+import 'package:drivora_autoquest/pages/editProfilePage.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/utils.dart';
 
 class ProfileInfo extends StatefulWidget {
   final String uid;
@@ -53,7 +57,9 @@ class _ProfileInfoState extends State<ProfileInfo> {
         future: _userData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFF7A30)),
+            );
           }
 
           if (snapshot.hasError) {
@@ -181,6 +187,28 @@ class _ProfileInfoState extends State<ProfileInfo> {
                 ),
 
                 const SizedBox(height: 30),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: MyButton(
+                    text: "Edit Profile",
+                    onPressed: () {
+                      Get.to(
+                        () => EditProfilePage(
+                          uid: widget.uid,
+                          currentContact1: user['contact_number1'] ?? '',
+                          currentContact2: user['contact_number2'] ?? '',
+                          currentLicenseFront: user['drivers_license_front'],
+                          currentLicenseBack: user['drivers_license_back'],
+                        ),
+                      );
+                    },
+                    cornerRadius: 10,
+                    buttonHeight: 50,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
               ],
             ),
           );
@@ -250,12 +278,12 @@ class _ProfileInfoState extends State<ProfileInfo> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        imageWidget,
-        const SizedBox(height: 8),
         Text(
           label,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
+        const SizedBox(height: 8),
+        imageWidget,
       ],
     );
   }

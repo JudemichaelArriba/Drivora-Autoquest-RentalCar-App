@@ -156,7 +156,37 @@ class DialogHelper {
       text: 'Do you want to logout?',
       confirmBtnText: 'Yes',
       cancelBtnText: 'No',
-      confirmBtnColor: Colors.green,
+      confirmBtnColor: Color(0xFFFF7A30),
+      onConfirmBtnTap: () {
+        confirmed = true;
+        Navigator.of(context).pop();
+      },
+      onCancelBtnTap: () {
+        confirmed = false;
+        Navigator.of(context).pop();
+      },
+    );
+
+    return confirmed;
+  }
+
+  static Future<bool> showConfirmationDialog(
+    BuildContext context, {
+    required String message,
+    String confirmText = 'Yes',
+    String cancelText = 'No',
+    Color confirmColor = Colors.green,
+    Color cancelColor = Colors.grey,
+  }) async {
+    bool confirmed = false;
+
+    await QuickAlert.show(
+      context: context,
+      type: QuickAlertType.confirm,
+      text: message,
+      confirmBtnText: confirmText,
+      cancelBtnText: cancelText,
+      confirmBtnColor: confirmColor,
       onConfirmBtnTap: () {
         confirmed = true;
         Navigator.of(context).pop();

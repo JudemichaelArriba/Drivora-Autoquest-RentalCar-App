@@ -19,7 +19,7 @@ class _BookingsPageState extends State<BookingsPage> {
   List<dynamic> bookings = [];
   List<dynamic> filteredBookings = [];
   bool isLoading = true;
-  bool isCancelling = false; // new loader state
+  bool isCancelling = false;
   String selectedCategory = "All";
   final TextEditingController searchController = TextEditingController();
 
@@ -197,8 +197,15 @@ class _BookingsPageState extends State<BookingsPage> {
                                         "pending"
                                     ? () async {
                                         final confirmed =
-                                            await DialogHelper.showLogoutConfirmation(
+                                            await DialogHelper.showConfirmationDialog(
                                               context,
+                                              message:
+                                                  "Are you sure you want to cancel this booking?",
+                                              confirmText: "Yes",
+                                              cancelText: "No",
+                                              confirmColor: const Color(
+                                                0xFFFF7A30,
+                                              ),
                                             );
 
                                         if (confirmed) {
