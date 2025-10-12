@@ -5,7 +5,6 @@ import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
 
 class ProfileInfo extends StatefulWidget {
   final String uid;
@@ -40,17 +39,17 @@ class _ProfileInfoState extends State<ProfileInfo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Profile Information"),
         centerTitle: true,
-        backgroundColor: accentColor,
+        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        foregroundColor: Colors.black,
         titleTextStyle: const TextStyle(
           fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          color: Colors.black87,
         ),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -63,152 +62,301 @@ class _ProfileInfoState extends State<ProfileInfo> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Unable to load profile",
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text("No data found"));
+            return const Center(
+              child: Text(
+                "No profile data found",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
           }
 
           final user = snapshot.data!;
 
           return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: Column(
               children: [
                 Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [accentColor.withOpacity(0.8), accentColor],
+                      colors: [
+                        accentColor.withOpacity(0.08),
+                        accentColor.withOpacity(0.02),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: accentColor.withOpacity(0.1)),
                   ),
-                  child: Column(
+                  child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage: widget.photoUrl != null
-                            ? NetworkImage(widget.photoUrl!)
-                            : null,
-                        child: widget.photoUrl == null
-                            ? Icon(Icons.person, size: 60, color: accentColor)
-                            : null,
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: accentColor.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: ClipOval(
+                          child: widget.photoUrl != null
+                              ? Image.network(
+                                  widget.photoUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  color: accentColor.withOpacity(0.1),
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: accentColor,
+                                  ),
+                                ),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        user['email'] ?? 'No Email',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user['email'] ?? 'No Email',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: accentColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                "Active User",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: accentColor,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Card(
+                const SizedBox(height: 24),
+
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 8,
-                    shadowColor: Colors.black26,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          buildInfoRow(Icons.email, "Email", user['email']),
-                          const SizedBox(height: 12),
-                          buildInfoRow(
-                            Icons.phone,
-                            "Contact 1",
-                            user['contact_number1'],
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: accentColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.contact_page,
+                              size: 20,
+                              color: accentColor,
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          buildInfoRow(
-                            Icons.phone_android,
-                            "Contact 2",
-                            user['contact_number2'],
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Contact Information",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Driver's License",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: accentColor,
+                      const SizedBox(height: 20),
+                      _buildInfoItem(
+                        Icons.email_outlined,
+                        "Email Address",
+                        user['email'],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      _buildInfoItem(
+                        Icons.phone_iphone_outlined,
+                        "Primary Contact",
+                        user['contact_number1'],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInfoItem(
+                        Icons.phone_android_outlined,
+                        "Secondary Contact",
+                        user['contact_number2'],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Card(
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(
+                const SizedBox(height: 24),
+
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: accentColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.badge_outlined,
+                              size: 20,
+                              color: accentColor,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Driver's License",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLicenseImage(
+                        user['drivers_license_front'],
+                        "Front Side",
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLicenseImage(
+                        user['drivers_license_back'],
+                        "Back Side",
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [accentColor, const Color(0xFFFF9A30)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(16),
-                    ),
-                    shadowColor: Colors.black12,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          licenseImage(user['drivers_license_front'], "Front"),
-                          const SizedBox(height: 20),
-                          licenseImage(user['drivers_license_back'], "Back"),
+                      onTap: () {
+                        Get.to(
+                          () => EditProfilePage(
+                            uid: widget.uid,
+                            currentContact1: user['contact_number1'] ?? '',
+                            currentContact2: user['contact_number2'] ?? '',
+                            currentLicenseFront: user['drivers_license_front'],
+                            currentLicenseBack: user['drivers_license_back'],
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(
+                            Icons.edit_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "Edit Profile",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 30),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: MyButton(
-                    text: "Edit Profile",
-                    onPressed: () {
-                      Get.to(
-                        () => EditProfilePage(
-                          uid: widget.uid,
-                          currentContact1: user['contact_number1'] ?? '',
-                          currentContact2: user['contact_number2'] ?? '',
-                          currentLicenseFront: user['drivers_license_front'],
-                          currentLicenseBack: user['drivers_license_back'],
-                        ),
-                      );
-                    },
-                    cornerRadius: 10,
-                    buttonHeight: 50,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
               ],
             ),
           );
@@ -217,34 +365,69 @@ class _ProfileInfoState extends State<ProfileInfo> {
     );
   }
 
-  Widget buildInfoRow(IconData icon, String title, String? value) {
+  Widget _buildInfoItem(IconData icon, String title, String? value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: accentColor),
-        const SizedBox(width: 12),
+        Icon(icon, color: accentColor, size: 22),
+        const SizedBox(width: 16),
         Expanded(
-          flex: 2,
-          child: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            value ?? 'N/A',
-            style: const TextStyle(fontSize: 16, color: Colors.black54),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value ?? 'Not provided',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget licenseImage(String? base64Image, String label) {
+  Widget _buildLicenseImage(String? base64Image, String label) {
     Widget imageWidget;
 
     if (base64Image == null || base64Image.isEmpty) {
-      imageWidget = _placeholderImage();
+      imageWidget = Container(
+        height: 180,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.photo_camera_back,
+              size: 40,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "No $label Image",
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
     } else {
       try {
         final bytes = base64Decode(cleanBase64(base64Image));
@@ -253,66 +436,80 @@ class _ProfileInfoState extends State<ProfileInfo> {
             showDialog(
               context: context,
               builder: (_) => Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.all(20),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   child: Image.memory(bytes, fit: BoxFit.contain),
                 ),
               ),
             );
           },
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.memory(
-              bytes,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                Image.memory(
+                  bytes,
+                  width: double.infinity,
+                  height: 180,
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.3),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
       } catch (e) {
-        imageWidget = _errorImage();
+        imageWidget = Container(
+          height: 180,
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.red.shade100),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 40, color: Colors.red.shade400),
+              const SizedBox(height: 8),
+              Text(
+                "Invalid Image",
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        const SizedBox(height: 8),
-        imageWidget,
-      ],
-    );
-  }
-
-  Widget _placeholderImage() {
-    return Container(
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Icon(
-        Icons.image_not_supported,
-        color: Colors.grey,
-        size: 50,
-      ),
-    );
-  }
-
-  Widget _errorImage() {
-    return Container(
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.red.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Icon(Icons.error, color: Colors.red, size: 50),
-    );
+    return imageWidget;
   }
 }
