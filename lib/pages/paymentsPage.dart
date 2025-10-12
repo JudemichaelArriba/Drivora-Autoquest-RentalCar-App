@@ -43,6 +43,16 @@ class _PaymentsPageState extends State<PaymentsPage> {
       final data = await userService.getUserBills(uid);
       final billList = (data['bills'] as List<Bill>).toList();
 
+      billList.sort((a, b) {
+        if (a.paymentStatus.toLowerCase() == 'cancelled' &&
+            b.paymentStatus.toLowerCase() != 'cancelled')
+          return 1;
+        if (b.paymentStatus.toLowerCase() == 'cancelled' &&
+            a.paymentStatus.toLowerCase() != 'cancelled')
+          return -1;
+        return b.issuedAt.compareTo(a.issuedAt);
+      });
+
       setState(() {
         bills = billList;
         filteredBills = billList;
@@ -60,20 +70,38 @@ class _PaymentsPageState extends State<PaymentsPage> {
     final q = query?.toLowerCase() ?? '';
     final cat = category ?? selectedCategory;
 
+    final filtered = bills.where((bill) {
+      final matchesCategory = cat == "All" || bill.paymentStatus == cat;
+      final matchesQuery =
+          bill.billId.toString().toLowerCase().contains(q) ||
+          bill.bookingId.toLowerCase().contains(q);
+      return matchesCategory && matchesQuery;
+    }).toList();
+
+    filtered.sort((a, b) {
+      if (a.paymentStatus.toLowerCase() == 'cancelled' &&
+          b.paymentStatus.toLowerCase() != 'cancelled')
+        return 1;
+      if (b.paymentStatus.toLowerCase() == 'cancelled' &&
+          a.paymentStatus.toLowerCase() != 'cancelled')
+        return -1;
+      return b.issuedAt.compareTo(a.issuedAt);
+    });
+
     setState(() {
       selectedCategory = cat;
-      filteredBills = bills.where((bill) {
-        final matchesCategory = cat == "All" || bill.paymentStatus == cat;
-        final matchesQuery =
-            bill.billId.toString().toLowerCase().contains(q) ||
-            bill.bookingId.toLowerCase().contains(q);
-        return matchesCategory && matchesQuery;
-      }).toList();
+      filteredBills = filtered;
     });
   }
 
   void filterByCategory(String category) {
     filterBills(category: category, query: searchController.text);
+  }
+
+  double get totalAmount {
+    return bills
+        .where((bill) => bill.paymentStatus.toLowerCase() == 'unpaid')
+        .fold(0, (sum, bill) => sum + bill.amount);
   }
 
   @override
@@ -132,29 +160,110 @@ class _PaymentsPageState extends State<PaymentsPage> {
               ? const Center(
                   child: CircularProgressIndicator(color: Color(0xFFFF7A30)),
                 )
-              : filteredBills.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No bills yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 33),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: const Color(0xFFFF7A30).withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFFF7A30,
+                                  ).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.payments_outlined,
+                                  color: Color(0xFFFF7A30),
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '\₱${totalAmount.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFFFF7A30),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Total Bills',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      filteredBills.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.only(top: 50),
+                              child: Text(
+                                'No bills yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                0,
+                                16,
+                                120,
+                              ),
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: filteredBills.length,
+                              itemBuilder: (context, index) {
+                                final bill = filteredBills[index];
+                                return BillCard(
+                                  key: ValueKey(bill.billId),
+                                  billId: bill.billId.toString(),
+                                  bookingId: bill.bookingId,
+                                  carId: bill.carId,
+                                  amount: bill.amount,
+                                  paymentStatus: bill.paymentStatus,
+                                  issuedAt: bill.issuedAt.toIso8601String(),
+                                  updatedAt: bill.updatedAt.toIso8601String(),
+                                );
+                              },
+                            ),
+                    ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-                  itemCount: filteredBills.length,
-                  itemBuilder: (context, index) {
-                    final bill = filteredBills[index];
-                    return BillCard(
-                      key: ValueKey(bill.billId),
-                      billId: bill.billId.toString(),
-                      bookingId: bill.bookingId,
-                      carId: bill.carId,
-                      amount: bill.amount,
-                      paymentStatus: bill.paymentStatus,
-                      issuedAt: bill.issuedAt.toIso8601String(),
-                      updatedAt: bill.updatedAt.toIso8601String(),
-                    );
-                  },
                 ),
         ),
       ],

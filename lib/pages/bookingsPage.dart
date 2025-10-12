@@ -47,6 +47,18 @@ class _BookingsPageState extends State<BookingsPage> {
         api: apiConnection,
       ).getActiveBookings(uid);
 
+      data.sort((a, b) {
+        final aStatus = a.status.toLowerCase();
+        final bStatus = b.status.toLowerCase();
+        if ((aStatus == 'cancelled' || aStatus == 'declined') &&
+            !(bStatus == 'cancelled' || bStatus == 'declined'))
+          return 1;
+        if ((bStatus == 'cancelled' || bStatus == 'declined') &&
+            !(aStatus == 'cancelled' || aStatus == 'declined'))
+          return -1;
+        return a.startDate.compareTo(b.startDate);
+      });
+
       setState(() {
         bookings = data;
         filteredBookings = data;
@@ -64,14 +76,28 @@ class _BookingsPageState extends State<BookingsPage> {
     String q = query?.toLowerCase() ?? '';
     String cat = category ?? selectedCategory;
 
+    final filtered = bookings.where((b) {
+      final matchesCategory =
+          cat == "All" || b.status.toLowerCase() == cat.toLowerCase();
+      final matchesQuery = b.bookingId.toLowerCase().contains(q);
+      return matchesCategory && matchesQuery;
+    }).toList();
+
+    filtered.sort((a, b) {
+      final aStatus = a.status.toLowerCase();
+      final bStatus = b.status.toLowerCase();
+      if ((aStatus == 'cancelled' || aStatus == 'declined') &&
+          !(bStatus == 'cancelled' || bStatus == 'declined'))
+        return 1;
+      if ((bStatus == 'cancelled' || bStatus == 'declined') &&
+          !(aStatus == 'cancelled' || aStatus == 'declined'))
+        return -1;
+      return a.startDate.compareTo(b.startDate);
+    });
+
     setState(() {
       selectedCategory = cat;
-      filteredBookings = bookings.where((b) {
-        final matchesCategory =
-            cat == "All" || b.status.toLowerCase() == cat.toLowerCase();
-        final matchesQuery = b.bookingId.toLowerCase().contains(q);
-        return matchesCategory && matchesQuery;
-      }).toList();
+      filteredBookings = filtered;
     });
   }
 
@@ -157,7 +183,8 @@ class _BookingsPageState extends State<BookingsPage> {
                                   child: _buildSummaryBox(
                                     'Upcoming',
                                     upcomingCount,
-                                    Colors.orange,
+                                    const Color(0xFFFF7A30),
+                                    Icons.upcoming_outlined,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -166,6 +193,7 @@ class _BookingsPageState extends State<BookingsPage> {
                                     'Done',
                                     doneCount,
                                     Colors.green,
+                                    Icons.check_circle_outline,
                                   ),
                                 ),
                               ],
@@ -283,34 +311,53 @@ class _BookingsPageState extends State<BookingsPage> {
     );
   }
 
-  Widget _buildSummaryBox(String label, int count, Color color) {
+  Widget _buildSummaryBox(String label, int count, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(
-            count.toString(),
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: color,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
           ),
         ],
       ),
