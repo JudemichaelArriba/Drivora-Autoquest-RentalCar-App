@@ -490,7 +490,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                             ),
                             const SizedBox(height: 12),
                             const Text(
-                              "Your booking details are confirmed. You can contact support if you need to make any changes to your reservation.",
+                              "If your booking details are confirmed. You can contact support if you need to make any changes to your reservation.",
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.black54,
