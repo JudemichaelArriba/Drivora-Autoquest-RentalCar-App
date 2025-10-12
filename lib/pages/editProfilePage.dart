@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:drivora_autoquest/components/my_numberTextfield.dart';
 import 'package:drivora_autoquest/components/my_button.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
-// import 'package:http/http.dart' as http;
 
 class EditProfilePage extends StatefulWidget {
   final String uid;
@@ -96,8 +95,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (contact1Controller.text.length != 11) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter a valid 11-digit Contact 1."),
+        SnackBar(
+          content: const Text("Please enter a valid 11-digit Contact 1."),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -106,8 +110,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (contact2Controller.text.isNotEmpty &&
         contact2Controller.text.length != 11) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter a valid 11-digit Contact 2."),
+        SnackBar(
+          content: const Text("Please enter a valid 11-digit Contact 2."),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -115,10 +124,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (licenseFrontImage == null && widget.currentLicenseFront == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Please upload the front side of your driver’s license.",
+        SnackBar(
+          content: const Text(
+            "Please upload the front side of your driver's license.",
           ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -126,10 +140,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (licenseBackImage == null && widget.currentLicenseBack == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Please upload the back side of your driver’s license.",
+        SnackBar(
+          content: const Text(
+            "Please upload the back side of your driver's license.",
           ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -144,9 +163,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
 
     if (!confirm) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Profile update canceled.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Profile update canceled."),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
       return;
     }
 
@@ -182,82 +207,231 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           "Edit Profile",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
         ),
-        backgroundColor: accentColor,
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         centerTitle: true,
         elevation: 0,
+        shadowColor: Colors.black.withOpacity(0.1),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "You can edit your contact numbers and update your driver’s license images.",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 30),
-
-            MyNumberTextField(
-              controller: contact1Controller,
-              label: "Contact Number 1",
-              requiredLength: 11,
-            ),
-            const SizedBox(height: 20),
-            MyNumberTextField(
-              controller: contact2Controller,
-              label: "Contact Number 2 (Optional)",
-              requiredLength: 11,
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "Driver’s License Images",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFFF7A30),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: accentColor.withOpacity(0.2)),
               ),
-            ),
-            const SizedBox(height: 10),
-
-            _buildImageUploadSection(
-              "Front Side",
-              true,
-              widget.currentLicenseFront,
-            ),
-            const SizedBox(height: 20),
-            _buildImageUploadSection(
-              "Back Side",
-              false,
-              widget.currentLicenseBack,
-            ),
-
-            const SizedBox(height: 40),
-
-            isSaving
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFFF7A30)),
-                  )
-                : Opacity(
-                    opacity: hasChanges ? 1 : 0.5,
-                    child: IgnorePointer(
-                      ignoring: !hasChanges,
-                      child: MyButton(
-                        text: "Save Changes",
-                        onPressed: saveChanges,
-                        cornerRadius: 10,
-                        buttonHeight: 50,
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: accentColor, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      "You can update your contact information and driver's license",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.phone_outlined,
+                          size: 20,
+                          color: accentColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        "Contact Information",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  MyNumberTextField(
+                    controller: contact1Controller,
+                    label: "Primary Contact Number",
+                    requiredLength: 11,
+                  ),
+                  const SizedBox(height: 16),
+                  MyNumberTextField(
+                    controller: contact2Controller,
+                    label: "Secondary Contact Number (Optional)",
+                    requiredLength: 11,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.badge_outlined,
+                          size: 20,
+                          color: accentColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        "Driver's License",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildImageUploadSection(
+                    "Front Side",
+                    true,
+                    widget.currentLicenseFront,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildImageUploadSection(
+                    "Back Side",
+                    false,
+                    widget.currentLicenseBack,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: hasChanges
+                    ? LinearGradient(
+                        colors: [accentColor, const Color(0xFFFF9A30)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      )
+                    : LinearGradient(
+                        colors: [Colors.grey.shade400, Colors.grey.shade500],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: hasChanges
+                    ? [
+                        BoxShadow(
+                          color: accentColor.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: hasChanges && !isSaving ? saveChanges : null,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.save_outlined,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Save Changes",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -276,17 +450,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Container(
           width: double.infinity,
           height: 180,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
             image: imageFile != null
                 ? DecorationImage(
                     image: FileImage(imageFile),
