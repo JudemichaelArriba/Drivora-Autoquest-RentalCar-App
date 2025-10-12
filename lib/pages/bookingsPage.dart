@@ -1,6 +1,7 @@
 import 'package:drivora_autoquest/components/booking_card.dart';
 import 'package:drivora_autoquest/components/dialog_helper.dart';
 import 'package:drivora_autoquest/models/Booking.dart';
+import 'package:drivora_autoquest/pages/booking_detail_page.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
 import 'package:drivora_autoquest/components/categoryFilter.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
+import 'package:get/get.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -183,7 +185,35 @@ class _BookingsPageState extends State<BookingsPage> {
                                 endDate: booking.endDate.toIso8601String(),
                                 totalPrice: booking.totalPrice,
                                 status: booking.status,
-                                onDetailsPressed: () {},
+                                onDetailsPressed: () async {
+                                  try {
+                                    final carService = CarService(
+                                      api: apiConnection,
+                                    );
+                                    final car = await carService.getCarById(
+                                      booking.carId,
+                                    );
+
+                                    Get.to(
+                                      () => BookingDetailPage(
+                                        bookingId: booking.bookingId,
+                                        carId: car.carId,
+                                        startDate: booking.startDate
+                                            .toIso8601String(),
+                                        endDate: booking.endDate
+                                            .toIso8601String(),
+                                        totalPrice: booking.totalPrice,
+                                        status: booking.status,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    DialogHelper.showErrorDialog(
+                                      context,
+                                      "Failed to load car details: $e",
+                                    );
+                                  }
+                                },
+
                                 onCancelPressed:
                                     booking.status.toLowerCase() == "pending"
                                     ? () async {

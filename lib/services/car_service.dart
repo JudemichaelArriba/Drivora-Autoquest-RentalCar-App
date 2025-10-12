@@ -1,4 +1,5 @@
 import 'package:drivora_autoquest/models/FavoriteCar%20.dart';
+import 'package:drivora_autoquest/models/car.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 
 class CarService {
@@ -101,6 +102,22 @@ class CarService {
       }
     } catch (e) {
       throw Exception('Error cancelling booking: $e');
+    }
+  }
+
+  Future<Car> getCarById(int carId) async {
+    try {
+      final response = await api.postData('getCarById.php', {
+        'carId': carId.toString(),
+      });
+
+      if (response['error'] != null) {
+        throw Exception(response['error']);
+      }
+
+      return Car.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to fetch car: $e');
     }
   }
 }

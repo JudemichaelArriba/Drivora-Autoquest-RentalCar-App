@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 class BookingDetailPage extends StatefulWidget {
   final String bookingId;
-  final int carId; // <-- Add carId
+  final int carId;
   final String startDate;
   final String endDate;
   final double totalPrice;
@@ -16,7 +16,7 @@ class BookingDetailPage extends StatefulWidget {
   const BookingDetailPage({
     super.key,
     required this.bookingId,
-    required this.carId, // <-- Add this
+    required this.carId,
     required this.startDate,
     required this.endDate,
     required this.totalPrice,
@@ -28,39 +28,45 @@ class BookingDetailPage extends StatefulWidget {
 }
 
 class _BookingDetailPageState extends State<BookingDetailPage> {
-  Uint8List? _carImage;
-  bool _loadingImage = true;
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  List<Uint8List?> _carImages = [null, null, null];
+  bool _loadingImages = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchCarImage();
+    _fetchCarImages();
   }
 
-  Future<void> _fetchCarImage() async {
+  Future<void> _fetchCarImages() async {
     try {
       final carService = CarService(api: apiConnection);
-      final cars = await carService.getCars(""); // Or a dedicated getCarById()
-      final car = cars.firstWhere(
-        (c) => c['carId'].toString() == widget.carId.toString(),
-      );
+      final car = await carService.getCarById(widget.carId);
 
-      if (car['image_data1'] != null) {
-        setState(() {
-          _carImage = base64Decode(
-            car['image_data1'].replaceFirst(
-              RegExp(r'data:image/[^;]+;base64,'),
-              '',
-            ),
-          );
-        });
-      }
+      setState(() {
+        _carImages = [
+          _decodeBase64(car.imageBase64_1),
+          _decodeBase64(car.imageBase64_2),
+          _decodeBase64(car.imageBase64_3),
+        ];
+      });
     } catch (e) {
-      print("Failed to load car image: $e");
+      print("Failed to load car images: $e");
     } finally {
       setState(() {
-        _loadingImage = false;
+        _loadingImages = false;
       });
+    }
+  }
+
+  Uint8List? _decodeBase64(String? data) {
+    if (data == null || data.isEmpty) return null;
+    try {
+      final clean = data.replaceFirst(RegExp(r'data:image/[^;]+;base64,'), '');
+      return base64Decode(clean);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -97,38 +103,93 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
     }
   }
 
-  Widget buildInfoRow(String label, String value, {IconData? icon}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildInfoCard(String label, String value, {IconData? icon}) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            if (icon != null) Icon(icon, color: Colors.orange, size: 28),
+            if (icon != null) const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage(Uint8List? decoded) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          if (icon != null) Icon(icon, color: Colors.orange, size: 20),
-          if (icon != null) const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black54,
+          decoded != null
+              ? Image.memory(decoded, fit: BoxFit.cover)
+              : Container(
+                  color: Colors.grey.shade300,
+                  child: const Icon(
+                    Icons.directions_car,
+                    size: 80,
+                    color: Colors.white70,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [Colors.black.withOpacity(0.2), Colors.transparent],
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDotIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (index) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: _currentPage == index ? 12 : 8,
+          height: _currentPage == index ? 12 : 8,
+          decoration: BoxDecoration(
+            color: _currentPage == index
+                ? Colors.orange
+                : Colors.orange.shade200,
+            shape: BoxShape.circle,
+          ),
+        );
+      }),
     );
   }
 
@@ -138,145 +199,98 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
           "Booking Details",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: Colors.orange.shade400,
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFFFF7A30),
         elevation: 0,
       ),
       backgroundColor: const Color(0xFFF7F7F7),
       body: SingleChildScrollView(
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🖼️ Car Image
-              Center(
-                child: Container(
-                  width: double.infinity,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.grey.shade200,
-                  ),
-                  child: _loadingImage
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.orange,
+              SizedBox(
+                height: 220,
+                child: _loadingImages
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.orange),
+                      )
+                    : Stack(
+                        children: [
+                          PageView(
+                            controller: _pageController,
+                            onPageChanged: (index) {
+                              setState(() => _currentPage = index);
+                            },
+                            children: _carImages.map(_buildImage).toList(),
                           ),
-                        )
-                      : _carImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.memory(_carImage!, fit: BoxFit.cover),
-                        )
-                      : const Center(
-                          child: Icon(
-                            Icons.directions_car,
-                            color: Colors.grey,
-                            size: 80,
+                          Positioned(
+                            bottom: 10,
+                            left: 0,
+                            right: 0,
+                            child: _buildDotIndicator(),
                           ),
-                        ),
-                ),
+                        ],
+                      ),
               ),
-
-              const SizedBox(height: 20),
-
-              // 🧾 Booking ID + Status
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Booking #${widget.bookingId}",
+                    widget.bookingId,
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: 16,
+                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
                       color: statusColor,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Text(
                       widget.status.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 20),
-              const Divider(),
-
-              const SizedBox(height: 16),
-              buildInfoRow(
+              const SizedBox(height: 24),
+              _buildInfoCard(
                 "Start Date",
                 "${formatDate(widget.startDate)} • ${formatTime(widget.startDate)}",
                 icon: Icons.calendar_today,
               ),
-              buildInfoRow(
+              _buildInfoCard(
                 "End Date",
                 "${formatDate(widget.endDate)} • ${formatTime(widget.endDate)}",
                 icon: Icons.access_time,
               ),
-              const SizedBox(height: 20),
-              const Divider(),
-              const SizedBox(height: 16),
-              buildInfoRow(
+              _buildInfoCard(
                 "Total Price",
                 "₱${widget.totalPrice.toStringAsFixed(2)}",
                 icon: Icons.attach_money,
-              ),
-
-              const SizedBox(height: 24),
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 14,
-                    ),
-                  ),
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  label: const Text(
-                    "Back",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
