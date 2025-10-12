@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:drivora_autoquest/models/Bill.dart';
 import 'package:drivora_autoquest/models/Booking.dart';
 import 'package:http/http.dart' as http;
 import 'api_connection.dart';
@@ -158,6 +159,41 @@ class UserService {
       }
     } catch (e) {
       throw Exception('Error updating user profile: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getUserBills(String uid) async {
+    try {
+      var uri = Uri.parse('${apiConnection.baseUrl}/getBills.php');
+
+      var response = await http.post(uri, body: {'uid': uid});
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse.containsKey('error')) {
+          throw Exception(jsonResponse['error']);
+        }
+
+        List<Bill> bills = [];
+        if (jsonResponse['bills'] != null && jsonResponse['bills'] is List) {
+          bills = (jsonResponse['bills'] as List)
+              .map((item) => Bill.fromJson(item))
+              .toList();
+        }
+
+        double totalAmount = 0.0;
+        if (jsonResponse.containsKey('total_amount')) {
+          totalAmount =
+              double.tryParse(jsonResponse['total_amount'].toString()) ?? 0.0;
+        }
+
+        return {'bills': bills, 'total_amount': totalAmount};
+      } else {
+        throw Exception('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching user bills: $e');
     }
   }
 }
