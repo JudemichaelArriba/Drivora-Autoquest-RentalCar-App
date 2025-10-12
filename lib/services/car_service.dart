@@ -1,3 +1,4 @@
+import 'package:drivora_autoquest/models/FavoriteCar%20.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 
 class CarService {
@@ -48,14 +49,15 @@ class CarService {
     }
   }
 
-  Future<List<dynamic>> getFavoriteCars(String uid) async {
+  Future<List<FavoriteCar>> getFavoriteCars(String uid) async {
     try {
       final response = await api.postData('get_favorite_cars.php', {
         'uid': uid,
       });
 
-      if (response['success'] == true) {
-        return response['cars'] ?? [];
+      if (response['success'] == true && response['cars'] != null) {
+        final List<dynamic> carList = response['cars'];
+        return carList.map((car) => FavoriteCar.fromJson(car)).toList();
       } else {
         throw Exception(response['message'] ?? 'Failed to fetch favorite cars');
       }

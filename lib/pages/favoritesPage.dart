@@ -1,7 +1,8 @@
 import 'package:drivora_autoquest/components/custom_card.dart';
 import 'package:drivora_autoquest/components/categoryFilter.dart';
 import 'package:drivora_autoquest/components/widgetSearchBar.dart';
-import 'package:drivora_autoquest/models/car.dart';
+import 'package:drivora_autoquest/models/FavoriteCar%20.dart';
+
 import 'package:drivora_autoquest/pages/selectedCarPage.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
@@ -16,8 +17,8 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class _FavoritesPageState extends State<FavoritesPage> {
-  List<Car> favoriteCars = [];
-  List<Car> filteredCars = [];
+  List<FavoriteCar> favoriteCars = [];
+  List<FavoriteCar> filteredCars = [];
   bool isLoading = true;
   String selectedCategory = "All";
   final TextEditingController searchController = TextEditingController();
@@ -38,14 +39,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
       ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
       return;
     }
+
     try {
       final carService = CarService(api: apiConnection);
       final data = await carService.getFavoriteCars(uid);
-      final carList = data.map<Car>((json) => Car.fromJson(json)).toList();
 
       setState(() {
-        favoriteCars = carList;
-        filteredCars = carList;
+        favoriteCars = data;
+        filteredCars = data;
         isLoading = false;
       });
     } catch (e) {
@@ -57,8 +58,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void filterFavorites({String? category, String? query}) {
-    String q = query?.toLowerCase() ?? '';
-    String cat = category ?? selectedCategory;
+    final q = query?.toLowerCase() ?? '';
+    final cat = category ?? selectedCategory;
 
     setState(() {
       selectedCategory = cat;
@@ -74,7 +75,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     filterFavorites(category: category, query: searchController.text);
   }
 
-  void removeFavorite(Car car) {
+  void removeFavorite(FavoriteCar car) {
     setState(() {
       removingMap[car.carId] = true;
     });
@@ -114,9 +115,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         child: Widgetsearchbar(
                           controller: searchController,
                           hintText: "Search favorites...",
-                          onChanged: (text) {
-                            filterFavorites(query: text);
-                          },
+                          onChanged: (text) => filterFavorites(query: text),
                           height: 50,
                           borderRadius: 15,
                           width: 130,
@@ -169,16 +168,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         child: isRemoving
                             ? const SizedBox.shrink()
                             : Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.only(bottom: 16.0),
                                 child: CustomCard(
                                   carId: car.carId,
                                   title: car.carName,
                                   status: car.status,
-                                  imageUrl: car.imageBase64_1 != null
-                                      ? "data:image/png;base64,${car.imageBase64_1}"
+                                  imageUrl: car.imageData1 != null
+                                      ? "data:image/png;base64,${car.imageData1}"
                                       : "https://via.placeholder.com/150",
                                   rentPrice: "₱${car.rentPrice}",
-                                  favorites: car.isFavorite,
+                                  favorites: true,
                                   onButtonPressed: () async {
                                     final result = await Navigator.push<bool>(
                                       context,
@@ -196,12 +195,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                             ) => SelectedCarPage(
                                               carId: car.carId,
                                               title: car.carName,
-                                              imageUrl1:
-                                                  car.imageBase64_1 ?? "",
-                                              imageUrl2:
-                                                  car.imageBase64_2 ?? "",
-                                              imageUrl3:
-                                                  car.imageBase64_3 ?? "",
+                                              imageUrl1: car.imageData1 ?? "",
+                                              imageUrl2: car.imageData2 ?? "",
+                                              imageUrl3: car.imageData3 ?? "",
                                               rentPrice: "${car.rentPrice}",
                                               carBrand: car.carBrand.isNotEmpty
                                                   ? car.carBrand
@@ -214,7 +210,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                                   car.carCategory.isNotEmpty
                                                   ? car.carCategory
                                                   : "Uncategorized",
-                                              favorites: car.isFavorite,
+                                              favorites: true,
                                             ),
                                         transitionsBuilder:
                                             (
@@ -265,10 +261,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                   onFavoriteChanged: (isFav) {
                                     if (!isFav) {
                                       removeFavorite(car);
-                                    } else {
-                                      setState(() {
-                                        car.isFavorite = isFav;
-                                      });
                                     }
                                   },
                                 ),

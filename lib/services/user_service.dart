@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:drivora_autoquest/models/Booking.dart';
 import 'package:http/http.dart' as http;
 import 'api_connection.dart';
 
@@ -72,7 +73,7 @@ class UserService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getActiveBookings(String uid) async {
+  Future<List<Booking>> getActiveBookings(String uid) async {
     try {
       var uri = Uri.parse('${api.baseUrl}/GetActiveBookingsByUser.php');
       var response = await http.post(uri, body: {'uid': uid});
@@ -81,7 +82,7 @@ class UserService {
         var jsonResponse = jsonDecode(response.body);
 
         if (jsonResponse is List) {
-          return List<Map<String, dynamic>>.from(jsonResponse);
+          return jsonResponse.map((item) => Booking.fromJson(item)).toList();
         } else if (jsonResponse is Map && jsonResponse.containsKey('error')) {
           throw Exception(jsonResponse['error']);
         } else {

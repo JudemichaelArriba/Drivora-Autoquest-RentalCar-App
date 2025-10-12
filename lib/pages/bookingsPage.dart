@@ -1,5 +1,6 @@
 import 'package:drivora_autoquest/components/booking_card.dart';
 import 'package:drivora_autoquest/components/dialog_helper.dart';
+import 'package:drivora_autoquest/models/Booking.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +17,8 @@ class BookingsPage extends StatefulWidget {
 }
 
 class _BookingsPageState extends State<BookingsPage> {
-  List<dynamic> bookings = [];
-  List<dynamic> filteredBookings = [];
+  List<Booking> bookings = [];
+  List<Booking> filteredBookings = [];
   bool isLoading = true;
   bool isCancelling = false;
   String selectedCategory = "All";
@@ -40,7 +41,10 @@ class _BookingsPageState extends State<BookingsPage> {
     }
 
     try {
-      final data = await UserService(api: apiConnection).getActiveBookings(uid);
+      final List<Booking> data = await UserService(
+        api: apiConnection,
+      ).getActiveBookings(uid);
+
       setState(() {
         bookings = data;
         filteredBookings = data;
@@ -61,10 +65,9 @@ class _BookingsPageState extends State<BookingsPage> {
     setState(() {
       selectedCategory = cat;
       filteredBookings = bookings.where((b) {
-        final matchesCategory = cat == "All" || b['status'] == cat;
-        final matchesQuery = b['car_title'].toString().toLowerCase().contains(
-          q,
-        );
+        final matchesCategory =
+            cat == "All" || b.status.toLowerCase() == cat.toLowerCase();
+        final matchesQuery = b.bookingId.toLowerCase().contains(q);
         return matchesCategory && matchesQuery;
       }).toList();
     });
@@ -76,13 +79,13 @@ class _BookingsPageState extends State<BookingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = <String>{for (var b in bookings) b['status']}.toList();
+    final categories = <String>{for (var b in bookings) b.status}.toList();
 
     final upcomingCount = bookings
-        .where((b) => b['status']?.toString().toLowerCase() == 'pending')
+        .where((b) => b.status.toLowerCase() == 'pending')
         .length;
     final doneCount = bookings
-        .where((b) => b['status']?.toString().toLowerCase() == 'completed')
+        .where((b) => b.status.toLowerCase() == 'completed')
         .length;
 
     return Column(
@@ -131,7 +134,6 @@ class _BookingsPageState extends State<BookingsPage> {
             ],
           ),
         ),
-
         Expanded(
           child: Stack(
             children: [
@@ -168,7 +170,6 @@ class _BookingsPageState extends State<BookingsPage> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
                           ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                             physics: const NeverScrollableScrollPhysics(),
@@ -177,24 +178,14 @@ class _BookingsPageState extends State<BookingsPage> {
                             itemBuilder: (context, index) {
                               final booking = filteredBookings[index];
                               return BookingCard(
-                                bookingId:
-                                    booking['bookingId']?.toString() ?? 'N/A',
-                                startDate:
-                                    booking['start_date']?.toString() ?? '-',
-                                endDate: booking['end_date']?.toString() ?? '-',
-                                totalPrice:
-                                    double.tryParse(
-                                      booking['total_price']?.toString() ?? '0',
-                                    ) ??
-                                    0.0,
-                                status:
-                                    booking['status']?.toString() ?? 'Unknown',
+                                bookingId: booking.bookingId,
+                                startDate: booking.startDate.toIso8601String(),
+                                endDate: booking.endDate.toIso8601String(),
+                                totalPrice: booking.totalPrice,
+                                status: booking.status,
                                 onDetailsPressed: () {},
                                 onCancelPressed:
-                                    booking['status']
-                                            ?.toString()
-                                            .toLowerCase() ==
-                                        "pending"
+                                    booking.status.toLowerCase() == "pending"
                                     ? () async {
                                         final confirmed =
                                             await DialogHelper.showConfirmationDialog(
@@ -219,8 +210,7 @@ class _BookingsPageState extends State<BookingsPage> {
                                             );
                                             final message = await carService
                                                 .cancelBooking(
-                                                  booking['bookingId']
-                                                      .toString(),
+                                                  booking.bookingId,
                                                 );
 
                                             DialogHelper.showSuccessDialog(

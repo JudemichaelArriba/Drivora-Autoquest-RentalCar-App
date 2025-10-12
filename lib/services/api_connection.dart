@@ -81,5 +81,5 @@ class ApiService {
 }
 
 final ApiService apiConnection = ApiService(
-  baseUrl: 'http://10.143.114.222/drivora_api',
+  baseUrl: 'http://10.138.148.222/drivora_api',
 );
