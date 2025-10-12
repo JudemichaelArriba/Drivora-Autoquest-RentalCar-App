@@ -41,12 +41,15 @@ class SelectedCarPage extends StatefulWidget {
   State<SelectedCarPage> createState() => _SelectedCarPageState();
 }
 
-class _SelectedCarPageState extends State<SelectedCarPage> {
+class _SelectedCarPageState extends State<SelectedCarPage>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   late bool _isFavorite;
   bool _agreedToRules = false;
   late List<Uint8List?> _decodedImages;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -58,6 +61,24 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
       _decodeBase64(widget.imageUrl2),
       _decodeBase64(widget.imageUrl3),
     ];
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _pageController.dispose();
+    super.dispose();
   }
 
   Uint8List? _decodeBase64(String data) {
@@ -71,36 +92,45 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
   }
 
   Widget _buildImage(Uint8List? decoded) {
-    if (decoded != null) {
-      return Image.memory(
-        decoded,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        gaplessPlayback: true,
-      );
-    }
     return Container(
-      color: Colors.grey.shade300,
-      alignment: Alignment.center,
-      child: const Icon(Icons.directions_car, size: 64, color: Colors.white70),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(0)),
+      child: decoded != null
+          ? Image.memory(
+              decoded,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              gaplessPlayback: true,
+            )
+          : Container(
+              color: Colors.grey.shade300,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.directions_car,
+                size: 80,
+                color: Colors.grey.shade600,
+              ),
+            ),
     );
   }
 
   Widget _buildDotIndicator() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(3, (index) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          width: _currentPage == index ? 10 : 6,
-          height: _currentPage == index ? 10 : 6,
-          decoration: BoxDecoration(
-            color: _currentPage == index ? Colors.white : Colors.white54,
-            shape: BoxShape.circle,
-          ),
-        );
-      }),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(3, (index) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: _currentPage == index ? 20 : 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: _currentPage == index ? Colors.white : Colors.white54,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          );
+        }),
+      ),
     );
   }
 
@@ -119,7 +149,6 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
 
   Future<void> _toggleFavorite() async {
     final carService = CarService(api: apiConnection);
-
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
 
     setState(() {
@@ -127,11 +156,18 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
     });
 
     if (uid == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please log in to add favorites"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
       return;
     }
+
     try {
       bool success;
       if (_isFavorite) {
@@ -145,16 +181,28 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
           _isFavorite = !_isFavorite;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to update favorite.")),
+          SnackBar(
+            content: const Text("Failed to update favorite"),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         );
       }
     } catch (e) {
       setState(() {
         _isFavorite = !_isFavorite;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to update favorite: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to update favorite: $e"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
     }
   }
 
@@ -170,52 +218,98 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
         return false;
       },
       child: Scaffold(
-        backgroundColor: Colors.grey.shade200,
-        body: CustomScrollView(
-          physics: const ClampingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 250,
-              pinned: true,
-              backgroundColor: Colors.black,
-              leading: Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: _popPage,
-                ),
-              ),
-              actions: [
-                Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
+        backgroundColor: Colors.white,
+        body: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return FadeTransition(opacity: _fadeAnimation, child: child);
+          },
+          child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 320,
+                pinned: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Container(
+                  margin: const EdgeInsets.all(12),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        onPressed: _popPage,
+                      ),
+                    ],
                   ),
-                  child: IconButton(
-                    icon: Icon(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: _isFavorite ? Colors.red : Colors.white,
+                ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.all(12),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            _isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            color: _isFavorite ? Colors.red : Colors.white,
+                            size: 24,
+                          ),
+                          onPressed: _toggleFavorite,
+                        ),
+                      ],
                     ),
-                    onPressed: _toggleFavorite,
                   ),
-                ),
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
+                ],
+                flexibleSpace: Stack(
                   children: [
                     PageView(
                       controller: _pageController,
                       onPageChanged: (index) {
-                        if (_currentPage != index) {
-                          setState(() {
-                            _currentPage = index;
-                          });
-                        }
+                        setState(() {
+                          _currentPage = index;
+                        });
                       },
                       children: [
                         _buildImage(_decodedImages[0]),
@@ -224,7 +318,7 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                       ],
                     ),
                     Positioned(
-                      bottom: 10,
+                      bottom: 20,
                       left: 0,
                       right: 0,
                       child: _buildDotIndicator(),
@@ -232,256 +326,370 @@ class _SelectedCarPageState extends State<SelectedCarPage> {
                   ],
                 ),
               ),
-            ),
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.title,
-                                style: const TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.5,
-                                  color: Colors.black87,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.title,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    color: Colors.black87,
+                                    height: 1.1,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.carBrand,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Column(
+                          ),
+                          const SizedBox(width: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF7A30), Color(0xFFFF5E00)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   "₱${widget.rentPrice}",
                                   style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFF7A30),
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 const Text(
                                   "/day",
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
                             ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildModernCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoRow(
+                              icon: Icons.category_rounded,
+                              title: "Category",
+                              value: widget.carCategory,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildInfoRow(
+                              icon: Icons.description_rounded,
+                              title: "Description",
+                              value: widget.carDescription,
+                              isDescription: true,
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        Divider(
-                          color: Colors.grey.shade300,
-                          thickness: 1,
-                          height: 1,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildDetailTile(
-                          icon: Icons.directions_car_filled,
-                          label: "Brand",
-                          value: widget.carBrand,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildDetailTile(
-                          icon: Icons.category,
-                          label: "Category",
-                          value: widget.carCategory,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildDetailTile(
-                          icon: Icons.description,
-                          label: "Description",
-                          value: widget.carDescription,
-                        ),
-                        const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFF7A30),
-                                  borderRadius: BorderRadius.circular(25),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildModernCard(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFF7A30),
+                                    Color(0xFFFF5E00),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                child: const Icon(
-                                  Icons.car_rental,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              const SizedBox(width: 16),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              child: const Icon(
+                                Icons.gavel_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Rental Guidelines',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Important rules and policies',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _showRentalRulesDialog,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      'Drivora Autoquest',
+                                      'View',
                                       style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue.shade700,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
                                       ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 16,
+                                      color: Colors.blue.shade700,
                                     ),
                                   ],
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: _showRentalRulesDialog,
-                                child: const Text(
-                                  'Rental rules >',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, -5),
+                          ),
+                        ],
+                      ),
+                      child: MyButton(
+                        text: "Book Now",
+                        cornerRadius: 16,
+                        buttonWidth: double.infinity,
+                        buttonHeight: 56,
+                        onPressed: () async {
+                          if (!_agreedToRules) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  "Please read and accept the Rental Rules first.",
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: MyButton(
-                      text: "Book Now",
-                      cornerRadius: 25,
-                      buttonWidth: 400,
-                      buttonHeight: 55,
-                      onPressed: () async {
-                        if (!_agreedToRules) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "Please read and accept the Rental Rules first.",
+                            );
+                            return;
+                          }
+                          final User? user = FirebaseAuth.instance.currentUser;
+                          if (user == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  "Please log in to continue",
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                            ),
-                          );
-                          return;
-                        }
-                        final User? user = FirebaseAuth.instance.currentUser;
-                        if (user == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("User not logged in")),
-                          );
-                          return;
-                        }
-                        try {
-                          String uid = user.uid;
-                          String status = await checkUserStatus(uid);
+                            );
+                            return;
+                          }
+                          try {
+                            String uid = user.uid;
+                            String status = await checkUserStatus(uid);
 
-                          if (status ==
-                              "User exists and information is complete") {
-                            // ScaffoldMessenger.of(context).showSnackBar(
-                            //   const SnackBar(
-                            //     content: Text("Proceeding"),
-                            //   ),
-                            // );
-                            if (user != null) {
-                              print(user.uid);
-                              print(widget.carId);
+                            if (status ==
+                                "User exists and information is complete") {
+                              if (user != null) {
+                                print(user.uid);
+                                print(widget.carId);
+                                Get.to(
+                                  Bookpage(
+                                    carPrice: widget.rentPrice,
+                                    uid: user.uid,
+                                    carId: widget.carId,
+                                  ),
+                                );
+                              }
+                            } else if (status ==
+                                    "User exists but information is incomplete" ||
+                                status == "User does not exist") {
                               Get.to(
-                                Bookpage(
+                                CredentialPage(
                                   carPrice: widget.rentPrice,
                                   uid: user.uid,
                                   carId: widget.carId,
                                 ),
                               );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Unexpected status: $status"),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
                             }
-                          } else if (status ==
-                                  "User exists but information is incomplete" ||
-                              status == "User does not exist") {
-                            Get.to(
-                              CredentialPage(
-                                carPrice: widget.rentPrice,
-                                uid: user.uid,
-                                carId: widget.carId,
-                              ),
-                            );
-                          } else {
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text("Unexpected status: $status"),
+                                content: Text(
+                                  "Failed to check user status: $e",
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             );
                           }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Failed to check user status: $e"),
-                            ),
-                          );
-                        }
-                      },
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDetailTile({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildModernCard({required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: const Color(0xFFFF7A30), size: 28),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: Colors.grey.shade100, width: 1),
       ),
+      child: child,
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String title,
+    required String value,
+    bool isDescription = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF7A30).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: const Color(0xFFFF7A30), size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: isDescription ? 15 : 16,
+                  fontWeight: isDescription ? FontWeight.w500 : FontWeight.w600,
+                  color: Colors.black87,
+                  height: isDescription ? 1.4 : 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
