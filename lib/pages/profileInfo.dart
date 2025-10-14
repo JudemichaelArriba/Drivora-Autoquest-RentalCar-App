@@ -404,26 +404,42 @@ class _ProfileInfoState extends State<ProfileInfo> {
 
     if (base64Image == null || base64Image.isEmpty) {
       imageWidget = Container(
-        height: 180,
+        height: 160,
+        width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.photo_camera_back,
-              size: 40,
-              color: Colors.grey.shade400,
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.photo_camera_back,
+                size: 24,
+                color: Colors.grey.shade400,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               "No $label Image",
               style: TextStyle(
+                fontSize: 14,
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.w500,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Tap edit to add image",
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
             ),
           ],
         ),
@@ -446,23 +462,23 @@ class _ProfileInfoState extends State<ProfileInfo> {
             );
           },
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             child: Stack(
               children: [
                 Image.memory(
                   bytes,
                   width: double.infinity,
-                  height: 180,
+                  height: 160,
                   fit: BoxFit.cover,
                 ),
                 Container(
-                  height: 180,
+                  height: 160,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.3),
+                        Colors.black.withOpacity(0.4),
                         Colors.transparent,
                       ],
                     ),
@@ -486,20 +502,34 @@ class _ProfileInfoState extends State<ProfileInfo> {
         );
       } catch (e) {
         imageWidget = Container(
-          height: 180,
+          height: 160,
+          width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.red.shade50,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.red.shade100),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.shade100, width: 1.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 40, color: Colors.red.shade400),
-              const SizedBox(height: 8),
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.error_outline,
+                  size: 24,
+                  color: Colors.red.shade400,
+                ),
+              ),
+              const SizedBox(height: 12),
               Text(
                 "Invalid Image",
                 style: TextStyle(
+                  fontSize: 14,
                   color: Colors.red.shade600,
                   fontWeight: FontWeight.w500,
                 ),
@@ -510,6 +540,20 @@ class _ProfileInfoState extends State<ProfileInfo> {
       }
     }
 
-    return imageWidget;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        imageWidget,
+      ],
+    );
   }
 }
