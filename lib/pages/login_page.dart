@@ -89,17 +89,28 @@ class _LoginPageState extends State<LoginPage> {
         password,
       );
 
-      await UserService(
+      final loginResponse = await UserService(
         api: apiConnection,
-      ).addUserIfNotExists(uid: user.user!.uid, email: user.user!.email!);
+      ).loginUser(email: email, password: password);
 
-      DialogHelper.showSuccessDialog(
-        context,
-        "Welcome, ${user.user?.email}!",
-        onContinue: () {
-          Get.off(() => MainPage());
-        },
-      );
+      if (loginResponse['status'] == 'success') {
+        await UserService(
+          api: apiConnection,
+        ).addUserIfNotExists(uid: user.user!.uid, email: email);
+
+        DialogHelper.showSuccessDialog(
+          context,
+          loginResponse['message'] ?? "Login successful!",
+          onContinue: () {
+            Get.off(() => MainPage());
+          },
+        );
+      } else {
+        DialogHelper.showErrorDialog(
+          context,
+          loginResponse['message'] ?? "Invalid login credentials.",
+        );
+      }
     } catch (e) {
       DialogHelper.showErrorDialog(context, e.toString());
     } finally {

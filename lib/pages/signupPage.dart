@@ -1,8 +1,10 @@
 import 'package:drivora_autoquest/components/my_button.dart';
 import 'package:drivora_autoquest/components/my_textfield.dart';
 import 'package:drivora_autoquest/pages/login_page.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/auth_service.dart';
 import 'package:drivora_autoquest/components/dialog_helper.dart';
+import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -18,17 +20,55 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final AuthService _authService = AuthService();
 
+  String? firstNameError;
+  String? lastNameError;
   String? emailError;
   String? confirmPasswordError;
 
   @override
   void initState() {
     super.initState();
+
+    firstNameController.addListener(() {
+      final firstName = firstNameController.text.trim();
+      if (firstName.isEmpty) {
+        setState(() {
+          firstNameError = "First name is required";
+        });
+      } else if (firstName.length < 2) {
+        setState(() {
+          firstNameError = "First name must be at least 2 characters";
+        });
+      } else {
+        setState(() {
+          firstNameError = null;
+        });
+      }
+    });
+
+    lastNameController.addListener(() {
+      final lastName = lastNameController.text.trim();
+      if (lastName.isEmpty) {
+        setState(() {
+          lastNameError = "Last name is required";
+        });
+      } else if (lastName.length < 2) {
+        setState(() {
+          lastNameError = "Last name must be at least 2 characters";
+        });
+      } else {
+        setState(() {
+          lastNameError = null;
+        });
+      }
+    });
 
     emailController.addListener(() {
       final email = emailController.text.trim();
@@ -70,6 +110,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -77,16 +119,25 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _handleSignUp(BuildContext context) async {
+    final firstName = firstNameController.text.trim();
+    final lastName = lastNameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (firstName.isEmpty ||
+        lastName.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       DialogHelper.showErrorDialog(context, "All fields are required.");
       return;
     }
 
-    if (emailError != null || confirmPasswordError != null) {
+    if (firstNameError != null ||
+        lastNameError != null ||
+        emailError != null ||
+        confirmPasswordError != null) {
       DialogHelper.showErrorDialog(context, "Please fix the errors.");
       return;
     }
@@ -108,11 +159,24 @@ class _SignUpPageState extends State<SignUpPage> {
         email,
         password,
       );
+
+      final uid = user.user?.uid;
+
+      if (uid == null) throw Exception("Failed to retrieve user UID.");
+
+      final userService = UserService(api: apiConnection);
+      await userService.signupUser(
+        uid: uid,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      );
+
       if (context.mounted) Navigator.pop(context);
 
       DialogHelper.showSuccessDialog(
         context,
-        "Account created for ${user.user?.email}!",
+        "Account created successfully for $firstName!",
         onContinue: () {
           Get.off(() => MainPage());
         },
@@ -175,6 +239,20 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 10),
                       MyTextfield(
+                        controller: firstNameController,
+                        labelText: 'First Name',
+                        obscureText: false,
+                        errorText: firstNameError,
+                      ),
+                      const SizedBox(height: 20),
+                      MyTextfield(
+                        controller: lastNameController,
+                        labelText: 'Last Name',
+                        obscureText: false,
+                        errorText: lastNameError,
+                      ),
+                      const SizedBox(height: 20),
+                      MyTextfield(
                         controller: emailController,
                         labelText: 'Email',
                         obscureText: false,
@@ -222,8 +300,6 @@ class _SignUpPageState extends State<SignUpPage> {
                                     transition: Transition.leftToRight,
                                     duration: Duration(milliseconds: 400),
                                   );
-
-                                  // Get.off(() => LoginPage());
                                 },
                             ),
                           ],

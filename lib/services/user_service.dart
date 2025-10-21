@@ -196,6 +196,69 @@ class UserService {
       throw Exception('Error fetching user bills: $e');
     }
   }
+
+  Future<Map<String, dynamic>> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/loginUser.php');
+      var response = await http.post(
+        uri,
+        body: {'email': email, 'password': password},
+      );
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['status'] == 'success') {
+          return {
+            'status': 'success',
+            'message': jsonResponse['message'] ?? 'Login successful',
+          };
+        } else {
+          return {
+            'status': 'error',
+            'message': jsonResponse['message'] ?? 'Invalid credentials',
+          };
+        }
+      } else {
+        throw Exception('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error during login: $e');
+    }
+  }
+
+  Future<bool> signupUser({
+    required String uid,
+    required String email,
+    required String firstName,
+    required String lastName,
+  }) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/signUp.php');
+      var response = await http.post(
+        uri,
+        body: {
+          'uid': uid,
+          'email': email,
+          'first_name': firstName,
+          'last_name': lastName,
+        },
+      );
+
+      var jsonResponse = jsonDecode(response.body);
+
+      if (jsonResponse['success'] == true) {
+        return true;
+      } else {
+        throw Exception(jsonResponse['error'] ?? 'Failed to sign up user');
+      }
+    } catch (e) {
+      throw Exception('Error signing up user: $e');
+    }
+  }
 }
 
 Future<String> checkUserStatus(String uid) async {
