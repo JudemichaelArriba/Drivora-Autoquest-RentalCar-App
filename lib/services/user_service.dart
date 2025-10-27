@@ -259,6 +259,43 @@ class UserService {
       throw Exception('Error signing up user: $e');
     }
   }
+
+  Future<Map<String, dynamic>> fetchUserDetails(String uid) async {
+    try {
+      var uri = Uri.parse('${api.baseUrl}/GetUserById.php');
+      var response = await http.post(uri, body: {'uid': uid});
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse.containsKey('error')) {
+          throw Exception(jsonResponse['error']);
+        }
+
+        if (jsonResponse['drivers_license_front'] != null) {
+          jsonResponse['drivers_license_front'] = base64Decode(
+            jsonResponse['drivers_license_front'],
+          );
+        }
+        if (jsonResponse['drivers_license_back'] != null) {
+          jsonResponse['drivers_license_back'] = base64Decode(
+            jsonResponse['drivers_license_back'],
+          );
+        }
+        if (jsonResponse['profile_pic'] != null) {
+          jsonResponse['profile_pic'] = base64Decode(
+            jsonResponse['profile_pic'],
+          );
+        }
+
+        return Map<String, dynamic>.from(jsonResponse);
+      } else {
+        throw Exception('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching user details: $e');
+    }
+  }
 }
 
 Future<String> checkUserStatus(String uid) async {

@@ -67,45 +67,6 @@ class _CustomCardState extends State<CustomCard> {
     }
   }
 
-  // Future<void> _toggleFavorite() async {
-  //   if (_isBooked) return;
-  //   final carService = CarService(api: apiConnection);
-  //   //new changes here
-  //   final String? uid = FirebaseAuth.instance.currentUser?.uid;
-  //   //new changes here
-  //   setState(() {
-  //     _isFavorite = !_isFavorite;
-  //   });
-
-  //   if (uid == null) {
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text("User not logged in.")));
-  //     return;
-  //   }
-
-  //   try {
-  //     bool success;
-  //     if (_isFavorite) {
-  //       success = await carService.unmarkAsFavorite(uid, widget.carId);
-  //     } else {
-  //       success = await carService.markAsFavorite(uid, widget.carId);
-  //     }
-
-  //     if (success) {
-  //       setState(() {
-  //         _isFavorite = !_isFavorite;
-  //       });
-  //       widget.onFavoriteChanged?.call(_isFavorite);
-  //     }
-  //   } catch (e) {
-  //     print("Error toggling favorite: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Failed to update favorite")),
-  //     );
-  //   }
-  // }
-
   Future<void> _toggleFavorite() async {
     if (_isBooked) return;
     final carService = CarService(api: apiConnection);
@@ -164,7 +125,16 @@ class _CustomCardState extends State<CustomCard> {
     return Container(
       height: 250,
       width: double.infinity,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
@@ -178,31 +148,32 @@ class _CustomCardState extends State<CustomCard> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.6),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                  stops: const [0.4, 1.0],
                 ),
               ),
             ),
+
             Positioned(
-              left: 8,
+              left: 16,
               top: 150,
-              right: 50,
+              right: 16,
               child: Text(
                 widget.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
                 ),
               ),
             ),
+
             Positioned(
-              top: 8,
-              right: 8,
+              top: 12,
+              right: 12,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.5),
@@ -217,40 +188,92 @@ class _CustomCardState extends State<CustomCard> {
                 ),
               ),
             ),
+
             Positioned(
-              left: 8,
+              left: 16,
               right: 16,
-              bottom: 10,
+              bottom: 16,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    "${widget.rentPrice} /per day",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _isBooked ? null : widget.onButtonPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isBooked
-                          ? Colors.grey
-                          : const Color(0xFFFF7A30),
-                      minimumSize: const Size(80, 35),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "RENT PRICE",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.0,
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      const SizedBox(height: 2),
+                      Text(
+                        "${widget.rentPrice} / day",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: _isBooked
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFFFF7A30), Color(0xFFFF5E00)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      color: _isBooked ? Colors.grey : null,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: _isBooked
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: const Color(0xFFFF7A30).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                     ),
-                    icon: const Icon(Icons.book, color: Colors.white, size: 18),
-                    label: const Text(
-                      "Book Now",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isBooked ? null : widget.onButtonPressed,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.book_outlined,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "BOOK NOW",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -261,17 +284,32 @@ class _CustomCardState extends State<CustomCard> {
             if (_isBooked)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.black.withOpacity(0.6),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 alignment: Alignment.center,
-                child: const Text(
-                  "Not available at the moment.",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.block, color: Colors.white, size: 40),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Currently Unavailable",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "This vehicle is booked",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],
