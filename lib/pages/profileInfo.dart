@@ -10,8 +10,14 @@ import 'package:drivora_autoquest/models/user.dart' as MyUser;
 class ProfileInfo extends StatefulWidget {
   final String uid;
   final String? photoUrl;
+  final bool isGoogleAccount;
 
-  const ProfileInfo({super.key, required this.uid, this.photoUrl});
+  const ProfileInfo({
+    super.key,
+    required this.uid,
+    this.photoUrl,
+    this.isGoogleAccount = false,
+  });
 
   @override
   State<ProfileInfo> createState() => _ProfileInfoState();
@@ -123,9 +129,16 @@ class _ProfileInfoState extends State<ProfileInfo> {
                           ),
                         ),
                         child: ClipOval(
-                          child: widget.photoUrl != null
+                          child:
+                              widget.isGoogleAccount && widget.photoUrl != null
                               ? Image.network(
                                   widget.photoUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                              : (user.profilePic != null &&
+                                    user.profilePic!.isNotEmpty)
+                              ? Image.memory(
+                                  base64Decode(cleanBase64(user.profilePic!)),
                                   fit: BoxFit.cover,
                                 )
                               : Container(
@@ -247,7 +260,6 @@ class _ProfileInfoState extends State<ProfileInfo> {
 
                 const SizedBox(height: 24),
 
-                // Driver's License Card
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -303,7 +315,6 @@ class _ProfileInfoState extends State<ProfileInfo> {
 
                 const SizedBox(height: 32),
 
-                // Edit Profile Button
                 Container(
                   width: double.infinity,
                   height: 56,
@@ -334,6 +345,10 @@ class _ProfileInfoState extends State<ProfileInfo> {
                             currentContact2: user.contactNumber2 ?? '',
                             currentLicenseFront: user.driversLicenseFront,
                             currentLicenseBack: user.driversLicenseBack,
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                            profilePic: user.profilePic,
+                            isGoogleAccount: widget.isGoogleAccount,
                           ),
                         );
                       },

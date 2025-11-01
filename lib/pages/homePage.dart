@@ -6,9 +6,12 @@ import 'package:drivora_autoquest/pages/profilePage.dart';
 import 'package:drivora_autoquest/pages/selectedCarPage.dart';
 import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/car_service.dart';
+import 'package:drivora_autoquest/services/user_service.dart';
+import 'package:drivora_autoquest/models/user.dart' as MyUser;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -73,17 +76,63 @@ class _HomePageState extends State<HomePage> {
     filterCars(category: category, query: searchController.text);
   }
 
+  Widget _buildProfileAvatar() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.photoURL != null && user.photoURL!.isNotEmpty) {
+      return CircleAvatar(
+        radius: 23,
+        backgroundColor: Colors.white,
+        backgroundImage: NetworkImage(user.photoURL!),
+      );
+    } else if (user != null) {
+      return FutureBuilder<MyUser.User?>(
+        future: UserService(api: apiConnection).getUserById(user.uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircleAvatar(
+              radius: 23,
+              backgroundColor: Colors.white,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFFFF7A30),
+              ),
+            );
+          }
+          if (snapshot.hasData &&
+              snapshot.data!.profilePic != null &&
+              snapshot.data!.profilePic!.isNotEmpty) {
+            try {
+              final bytes = base64Decode(snapshot.data!.profilePic!);
+              return CircleAvatar(
+                radius: 23,
+                backgroundColor: Colors.white,
+                backgroundImage: MemoryImage(bytes),
+              );
+            } catch (e) {
+              return const CircleAvatar(
+                radius: 23,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person),
+              );
+            }
+          }
+          return const CircleAvatar(
+            radius: 23,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.person),
+          );
+        },
+      );
+    }
+    return const CircleAvatar(
+      radius: 23,
+      backgroundColor: Colors.white,
+      child: Icon(Icons.person),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    ImageProvider<Object> profileImage;
-
-    if (user != null && user.photoURL != null && user.photoURL!.isNotEmpty) {
-      profileImage = NetworkImage(user.photoURL!);
-    } else {
-      profileImage = const AssetImage("assets/default_profile.png");
-    }
-
     final categories = <String>{for (var car in cars) car.carCategory}.toList();
 
     return Column(
@@ -106,11 +155,7 @@ class _HomePageState extends State<HomePage> {
                           onTap: () {
                             Get.to(() => const ProfilePage());
                           },
-                          child: CircleAvatar(
-                            radius: 23,
-                            backgroundColor: Colors.white,
-                            backgroundImage: profileImage,
-                          ),
+                          child: _buildProfileAvatar(),
                         ),
                       ),
                       Positioned(

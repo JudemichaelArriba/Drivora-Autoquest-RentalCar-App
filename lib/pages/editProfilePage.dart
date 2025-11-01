@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:drivora_autoquest/components/dialog_helper.dart';
+import 'package:drivora_autoquest/components/my_numberTextfield.dart';
+import 'package:drivora_autoquest/components/my_textfield.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
+import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:drivora_autoquest/components/my_numberTextfield.dart';
-
-import 'package:drivora_autoquest/services/api_connection.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String uid;
@@ -14,6 +14,10 @@ class EditProfilePage extends StatefulWidget {
   final String currentContact2;
   final String? currentLicenseFront;
   final String? currentLicenseBack;
+  final String? firstName;
+  final String? lastName;
+  final String? profilePic;
+  final bool isGoogleAccount;
 
   const EditProfilePage({
     super.key,
@@ -22,6 +26,10 @@ class EditProfilePage extends StatefulWidget {
     required this.currentContact2,
     this.currentLicenseFront,
     this.currentLicenseBack,
+    this.firstName,
+    this.lastName,
+    this.profilePic,
+    required this.isGoogleAccount,
   });
 
   @override
@@ -33,8 +41,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   late TextEditingController contact1Controller;
   late TextEditingController contact2Controller;
+  TextEditingController? firstNameController;
+  TextEditingController? lastNameController;
+
   File? licenseFrontImage;
   File? licenseBackImage;
+  File? profileImage;
 
   bool isSaving = false;
   bool hasChanges = false;
@@ -48,6 +60,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     contact1Controller.addListener(_detectChanges);
     contact2Controller.addListener(_detectChanges);
+
+    if (!widget.isGoogleAccount) {
+      firstNameController = TextEditingController(text: widget.firstName ?? '');
+      lastNameController = TextEditingController(text: widget.lastName ?? '');
+      firstNameController!.addListener(_detectChanges);
+      lastNameController!.addListener(_detectChanges);
+    }
   }
 
   void _detectChanges() {
@@ -55,7 +74,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         contact1Controller.text != widget.currentContact1 ||
         contact2Controller.text != widget.currentContact2 ||
         licenseFrontImage != null ||
-        licenseBackImage != null;
+        licenseBackImage != null ||
+        profileImage != null ||
+        (!widget.isGoogleAccount &&
+            (firstNameController!.text != (widget.firstName ?? '') ||
+                lastNameController!.text != (widget.lastName ?? '')));
 
     if (changed != hasChanges) {
       setState(() => hasChanges = changed);
@@ -68,10 +91,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     contact2Controller.removeListener(_detectChanges);
     contact1Controller.dispose();
     contact2Controller.dispose();
+    firstNameController?.removeListener(_detectChanges);
+    lastNameController?.removeListener(_detectChanges);
+    firstNameController?.dispose();
+    lastNameController?.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImage(bool isFront, bool fromCamera) async {
+  Future<void> _pickImage(
+    bool isFront,
+    bool fromCamera, {
+    bool isProfile = false,
+  }) async {
     final pickedFile = await _picker.pickImage(
       source: fromCamera ? ImageSource.camera : ImageSource.gallery,
       maxWidth: 1024,
@@ -80,7 +111,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (pickedFile != null) {
       setState(() {
-        if (isFront) {
+        if (isProfile) {
+          profileImage = File(pickedFile.path);
+        } else if (isFront) {
           licenseFrontImage = File(pickedFile.path);
         } else {
           licenseBackImage = File(pickedFile.path);
@@ -154,6 +187,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
+    if (!widget.isGoogleAccount) {
+      if (firstNameController!.text.isEmpty ||
+          lastNameController!.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Please enter your first and last name."),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
     final confirm = await DialogHelper.showConfirmationDialog(
       context,
       message: "Do you want to save these changes?",
@@ -184,8 +234,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         uid: widget.uid,
         contactNumber1: contact1Controller.text.trim(),
         contactNumber2: contact2Controller.text.trim(),
+        firstName: !widget.isGoogleAccount
+            ? firstNameController!.text.trim()
+            : null,
+        lastName: !widget.isGoogleAccount
+            ? lastNameController!.text.trim()
+            : null,
         licenseFront: licenseFrontImage,
         licenseBack: licenseBackImage,
+        profilePic: !widget.isGoogleAccount ? profileImage : null,
       );
 
       if (success && mounted) {
@@ -228,32 +285,103 @@ class _EditProfilePageState extends State<EditProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: accentColor.withOpacity(0.2)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: accentColor, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      "You can update your contact information and driver's license",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
+            if (!widget.isGoogleAccount) ...[
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: accentColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.person_outlined,
+                            size: 20,
+                            color: accentColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Personal Information",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    MyTextfield(
+                      controller: firstNameController!,
+                      labelText: "First Name",
+                    ),
+                    const SizedBox(height: 16),
+                    MyTextfield(
+                      controller: lastNameController!,
+                      labelText: "Last Name",
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: accentColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.photo_camera_outlined,
+                            size: 20,
+                            color: accentColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Profile Picture",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildImageUploadSection(
+                      "Profile Picture",
+                      false,
+                      widget.profilePic,
+                      isProfile: true,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -304,9 +432,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -357,9 +483,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
             Container(
               width: double.infinity,
               height: 56,
@@ -430,7 +554,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
           ],
         ),
@@ -441,9 +564,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildImageUploadSection(
     String label,
     bool isFront,
-    String? currentBase64,
-  ) {
-    final imageFile = isFront ? licenseFrontImage : licenseBackImage;
+    String? currentBase64, {
+    bool isProfile = false,
+  }) {
+    final imageFile = isProfile
+        ? profileImage
+        : (isFront ? licenseFrontImage : licenseBackImage);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,7 +625,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(15),
                         ),
-                        onPressed: () => _pickImage(isFront, false),
+                        onPressed: () =>
+                            _pickImage(isFront, false, isProfile: isProfile),
                         child: const Icon(
                           Icons.upload_file,
                           color: Colors.white,
@@ -524,7 +651,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(15),
                         ),
-                        onPressed: () => _pickImage(isFront, true),
+                        onPressed: () =>
+                            _pickImage(isFront, true, isProfile: isProfile),
                         child: const Icon(
                           Icons.camera_alt,
                           color: Colors.white,

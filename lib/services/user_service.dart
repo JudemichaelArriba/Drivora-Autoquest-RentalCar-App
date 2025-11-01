@@ -124,8 +124,11 @@ class UserService {
     required String uid,
     required String contactNumber1,
     required String contactNumber2,
+    String? firstName,
+    String? lastName,
     File? licenseFront,
     File? licenseBack,
+    File? profilePic,
   }) async {
     try {
       var uri = Uri.parse('${api.baseUrl}/updateUser.php');
@@ -134,6 +137,9 @@ class UserService {
       request.fields['uid'] = uid;
       request.fields['contact_number1'] = contactNumber1;
       request.fields['contact_number2'] = contactNumber2;
+
+      if (firstName != null) request.fields['first_name'] = firstName;
+      if (lastName != null) request.fields['last_name'] = lastName;
 
       if (licenseFront != null && await licenseFront.exists()) {
         request.files.add(
@@ -147,6 +153,12 @@ class UserService {
         );
       }
 
+      if (profilePic != null && await profilePic.exists()) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profile_pic', profilePic.path),
+        );
+      }
+
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
       var jsonResponse = jsonDecode(responseBody);
@@ -155,7 +167,7 @@ class UserService {
         return true;
       } else {
         throw Exception(
-          jsonResponse['message'] ?? 'Failed to update user profile',
+          jsonResponse['error'] ?? 'Failed to update user profile',
         );
       }
     } catch (e) {

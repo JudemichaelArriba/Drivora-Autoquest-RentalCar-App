@@ -148,7 +148,11 @@ class ProfilePage extends StatelessWidget {
                       onTap: () {
                         if (uid != null) {
                           Get.to(
-                            () => ProfileInfo(uid: uid, photoUrl: photoUrl),
+                            () => ProfileInfo(
+                              uid: uid,
+                              photoUrl: photoUrl,
+                              isGoogleAccount: isGoogleUser,
+                            ),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
