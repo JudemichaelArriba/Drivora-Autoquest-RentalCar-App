@@ -5,6 +5,7 @@ import 'package:drivora_autoquest/services/api_connection.dart';
 import 'package:drivora_autoquest/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:drivora_autoquest/models/user.dart' as MyUser;
 
 class ProfileInfo extends StatefulWidget {
   final String uid;
@@ -17,7 +18,7 @@ class ProfileInfo extends StatefulWidget {
 }
 
 class _ProfileInfoState extends State<ProfileInfo> {
-  late Future<Map<String, dynamic>> _userData;
+  late Future<MyUser.User?> _userData;
   late UserService userService;
   final Color accentColor = const Color(0xFFFF7A30);
 
@@ -52,7 +53,7 @@ class _ProfileInfoState extends State<ProfileInfo> {
           color: Colors.black87,
         ),
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
+      body: FutureBuilder<MyUser.User?>(
         future: _userData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -87,11 +88,14 @@ class _ProfileInfoState extends State<ProfileInfo> {
           }
 
           final user = snapshot.data!;
+          final fullName =
+              ((user.firstName ?? '') + ' ' + (user.lastName ?? '')).trim();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
+                // Profile Header
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -140,7 +144,7 @@ class _ProfileInfoState extends State<ProfileInfo> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              user['email'] ?? 'No Email',
+                              fullName.isNotEmpty ? fullName : 'User',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -176,6 +180,7 @@ class _ProfileInfoState extends State<ProfileInfo> {
 
                 const SizedBox(height: 24),
 
+                // Contact Information Card
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -222,19 +227,19 @@ class _ProfileInfoState extends State<ProfileInfo> {
                       _buildInfoItem(
                         Icons.email_outlined,
                         "Email Address",
-                        user['email'],
+                        user.email,
                       ),
                       const SizedBox(height: 16),
                       _buildInfoItem(
                         Icons.phone_iphone_outlined,
                         "Primary Contact",
-                        user['contact_number1'],
+                        user.contactNumber1,
                       ),
                       const SizedBox(height: 16),
                       _buildInfoItem(
                         Icons.phone_android_outlined,
                         "Secondary Contact",
-                        user['contact_number2'],
+                        user.contactNumber2,
                       ),
                     ],
                   ),
@@ -242,6 +247,7 @@ class _ProfileInfoState extends State<ProfileInfo> {
 
                 const SizedBox(height: 24),
 
+                // Driver's License Card
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -286,20 +292,18 @@ class _ProfileInfoState extends State<ProfileInfo> {
                       ),
                       const SizedBox(height: 20),
                       _buildLicenseImage(
-                        user['drivers_license_front'],
+                        user.driversLicenseFront,
                         "Front Side",
                       ),
                       const SizedBox(height: 20),
-                      _buildLicenseImage(
-                        user['drivers_license_back'],
-                        "Back Side",
-                      ),
+                      _buildLicenseImage(user.driversLicenseBack, "Back Side"),
                     ],
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
+                // Edit Profile Button
                 Container(
                   width: double.infinity,
                   height: 56,
@@ -326,10 +330,10 @@ class _ProfileInfoState extends State<ProfileInfo> {
                         Get.to(
                           () => EditProfilePage(
                             uid: widget.uid,
-                            currentContact1: user['contact_number1'] ?? '',
-                            currentContact2: user['contact_number2'] ?? '',
-                            currentLicenseFront: user['drivers_license_front'],
-                            currentLicenseBack: user['drivers_license_back'],
+                            currentContact1: user.contactNumber1 ?? '',
+                            currentContact2: user.contactNumber2 ?? '',
+                            currentLicenseFront: user.driversLicenseFront,
+                            currentLicenseBack: user.driversLicenseBack,
                           ),
                         );
                       },

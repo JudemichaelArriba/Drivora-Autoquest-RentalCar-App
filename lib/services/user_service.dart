@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:drivora_autoquest/models/Bill.dart';
 import 'package:drivora_autoquest/models/Booking.dart';
+import 'package:drivora_autoquest/models/user.dart';
 import 'package:http/http.dart' as http;
 import 'api_connection.dart';
 
@@ -97,7 +98,7 @@ class UserService {
     }
   }
 
-  Future<Map<String, dynamic>> getUserById(String uid) async {
+  Future<User> getUserById(String uid) async {
     try {
       var uri = Uri.parse('${api.baseUrl}/GetUserById.php?uid=$uid');
       var response = await http.get(uri);
@@ -107,7 +108,7 @@ class UserService {
 
         if (jsonResponse['status'] == 'success' &&
             jsonResponse['data'] != null) {
-          return Map<String, dynamic>.from(jsonResponse['data']);
+          return User.fromJson(Map<String, dynamic>.from(jsonResponse['data']));
         } else {
           throw Exception(jsonResponse['message'] ?? 'User not found');
         }
